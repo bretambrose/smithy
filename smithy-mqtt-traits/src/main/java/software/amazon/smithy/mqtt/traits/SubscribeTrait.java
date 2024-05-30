@@ -28,7 +28,7 @@ public final class SubscribeTrait extends StringTrait {
 
     public SubscribeTrait(String topic, SourceLocation sourceLocation) {
         super(ID, topic, sourceLocation);
-        this.topic = Topic.parse(topic);
+        this.topic = Topic.parse(Topic.TopicType.TOPIC, topic);
     }
 
     public SubscribeTrait(String topic) {

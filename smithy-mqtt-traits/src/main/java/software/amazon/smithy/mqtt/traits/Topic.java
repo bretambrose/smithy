@@ -32,10 +32,12 @@ import java.util.stream.Collectors;
 public final class Topic {
     private static final Pattern LABEL_PATTERN = Pattern.compile("^[a-zA-Z0-9_]+$");
 
+    private final TopicType type;
     private final String topic;
     private final List<Level> levels;
 
-    private Topic(String topic, List<Level> levels) {
+    private Topic(TopicType type, String topic, List<Level> levels) {
+        this.type = type;
         this.topic = topic;
         this.levels = Collections.unmodifiableList(levels);
     }
@@ -47,15 +49,38 @@ public final class Topic {
      * @return Returns the parsed topic.
      * @throws TopicSyntaxException if the topic is malformed.
      */
-    public static Topic parse(String topic) {
+    public static Topic parse(TopicType type, String topic) {
         List<Level> levels = new ArrayList<>();
         Set<String> labels = new HashSet<>();
 
+        if (topic.isEmpty()) {
+            throw new TopicSyntaxException("Topics and topic filters may not be empty");
+        }
+
+        boolean hasFullWildcard = false;
+
         for (String level : topic.split("/")) {
-            if (level.contains("#") || level.contains("+")) {
+            if (hasFullWildcard) {
                 throw new TopicSyntaxException(format(
-                        "Wildcard levels are not allowed in MQTT topics. Found `%s` in `%s`", level, topic));
-            } else if (level.startsWith("{") && level.endsWith("}")) {
+                        "A full wildcard must be the last segment in a topic filter. Found `%s` in `%s`", level, topic)
+                );
+            }
+
+            if (level.contains("#") || level.contains("+")) {
+                if (type == TopicType.TOPIC) {
+                    throw new TopicSyntaxException(format(
+                            "Wildcard levels are not allowed in MQTT topics. Found `%s` in `%s`", level, topic));
+                } else if (level.length() > 1) {
+                    throw new TopicSyntaxException(format(
+                            "A wildcard must be the entire topic segment. Found `%s` in `%s`", level, topic));
+                }
+
+                if (level.equals("#")) {
+                    hasFullWildcard = true;
+                }
+            }
+
+            if (level.startsWith("{") && level.endsWith("}")) {
                 String label = level.substring(1, level.length() - 1);
                 if (!LABEL_PATTERN.matcher(label).matches()) {
                     throw new TopicSyntaxException(format(
@@ -68,12 +93,21 @@ public final class Topic {
             } else if (level.contains("{") || level.contains("}")) {
                 throw new TopicSyntaxException(format(
                         "Topic labels must span an entire level. Found `%s` in `%s`", level, topic));
-            } else {
-                levels.add(new Level(level, false));
             }
+
+            levels.add(new Level(level, false));
         }
 
-        return new Topic(topic, levels);
+        return new Topic(type, topic, levels);
+    }
+
+    /**
+     * Gets what kind of topic this instance is.
+     *
+     * @return the kind of topic instance: topic or topic filter
+     */
+    public TopicType getType() {
+        return type;
     }
 
     /**
@@ -124,13 +158,35 @@ public final class Topic {
         for (int i = 0; i < minSize; i++) {
             Level thisLevel = levels.get(i);
             Level otherLevel = other.levels.get(i);
+
+            // single-level wildcard is a level match regardless of the other level
+            if (thisLevel.getContent().equals("+") || otherLevel.getContent().equals("+")) {
+                continue;
+            }
+
+            // multi-level wildcard will conflict regardless of what the other level is
+            if (thisLevel.getContent().equals("#") || otherLevel.getContent().equals("#")) {
+                return true;
+            }
+
             // Both are static levels with different values.
             if (!thisLevel.isLabel() && !otherLevel.isLabel()
                 && !thisLevel.getContent().equals(otherLevel.getContent())) {
                 return false;
-            } else if (thisLevel.isLabel() != otherLevel.isLabel()) {
+            }
+
+            if (thisLevel.isLabel() != otherLevel.isLabel()) {
                 // One is static and the other is not, so there is not a
                 // conflict. One is more specific than the other.
+
+                // Note: I disagree with the above assertion and what it implies for the definition (which is not
+                // given anywhere) of "topic conflict."  My definition of "topic conflict" is "could potentially have
+                // a non-empty routing intersection."
+                //
+                // In particular, the above check can lead to a non-empty intersection if the label substitution
+                // yields a value that matches the non-label level's value.
+                //
+                // Despite this, I don't want to change the behavior of what currently exists.
                 return false;
             }
         }
@@ -226,5 +282,10 @@ public final class Topic {
         public int hashCode() {
             return Objects.hash(isLabel, value);
         }
+    }
+
+    public enum TopicType {
+        TOPIC,
+        FILTER
     }
 }

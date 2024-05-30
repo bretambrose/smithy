@@ -25,8 +25,8 @@ public class TopicConflictTest {
     @ParameterizedTest
     @MethodSource("data")
     public void patternConflicts(String topicA, String topicB, boolean isConflicting) {
-        Topic a = Topic.parse(topicA);
-        Topic b = Topic.parse(topicB);
+        Topic a = Topic.parse(Topic.TopicType.FILTER, topicA);
+        Topic b = Topic.parse(Topic.TopicType.FILTER, topicB);
 
         if (a.conflictsWith(b) != isConflicting) {
             if (isConflicting) {
@@ -65,6 +65,12 @@ public class TopicConflictTest {
                 {"a/b/c/d", "a/{b}/c/{d}", false},
                 // No conflict.
                 {"$aws/things/{thingName}/jobs/get", "$aws/things/{thingName}/jobs/start-next", false}
+/*
+                {"a/#", "a/b/c/d", true},
+                {"a/+/c", "a/b/c", true},
+                {"a/{b}/c", "a/+/c", true},
+                {"a/+/c", "a/b/c/d", false},
+                {"#", "/", true}*/
                 });
     }
 }

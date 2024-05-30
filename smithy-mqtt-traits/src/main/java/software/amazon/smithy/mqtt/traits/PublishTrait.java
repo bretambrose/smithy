@@ -28,7 +28,7 @@ public final class PublishTrait extends StringTrait {
 
     public PublishTrait(String topic, SourceLocation sourceLocation) {
         super(ID, topic, sourceLocation);
-        this.topic = Topic.parse(topic);
+        this.topic = Topic.parse(Topic.TopicType.TOPIC, topic);
     }
 
     public PublishTrait(String topic) {
