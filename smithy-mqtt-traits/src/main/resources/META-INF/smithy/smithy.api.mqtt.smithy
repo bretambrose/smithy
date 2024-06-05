@@ -63,3 +63,14 @@ string subscribe
 
 @trait(selector: "member[trait|required] :test(> :test(string, byte, short, integer, long, boolean, timestamp))")
 structure topicLabel {}
+
+/// Indicates properties of a Smithy operation as an IAM action.
+@trait(
+    selector: "operation",
+    conflicts: ["smithy.mqtt#subscribe", "smithy.mqtt#publish"],
+    breakingChanges: [{change: "any"}]
+)
+structure streamingOperation {
+    /// The topic that should be subscribed to
+    subscription: String
+}

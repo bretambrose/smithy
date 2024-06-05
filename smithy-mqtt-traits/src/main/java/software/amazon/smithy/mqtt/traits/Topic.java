@@ -93,9 +93,9 @@ public final class Topic {
             } else if (level.contains("{") || level.contains("}")) {
                 throw new TopicSyntaxException(format(
                         "Topic labels must span an entire level. Found `%s` in `%s`", level, topic));
+            } else {
+                levels.add(new Level(level, false));
             }
-
-            levels.add(new Level(level, false));
         }
 
         return new Topic(type, topic, levels);
@@ -108,6 +108,15 @@ public final class Topic {
      */
     public TopicType getType() {
         return type;
+    }
+
+    /**
+     * Gets the full topic value.
+     *
+     * @return the full topic value
+     */
+    public String getTopic() {
+        return topic;
     }
 
     /**
