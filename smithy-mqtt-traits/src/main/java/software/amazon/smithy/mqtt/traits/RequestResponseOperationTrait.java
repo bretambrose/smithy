@@ -25,7 +25,6 @@ import software.amazon.smithy.model.node.ToNode;
 import software.amazon.smithy.model.shapes.ShapeId;
 import software.amazon.smithy.model.traits.AbstractTrait;
 import software.amazon.smithy.model.traits.AbstractTraitBuilder;
-import software.amazon.smithy.model.traits.ExamplesTrait;
 import software.amazon.smithy.model.traits.Trait;
 import software.amazon.smithy.utils.BuilderRef;
 import software.amazon.smithy.utils.SmithyBuilder;
@@ -68,6 +67,18 @@ public final class RequestResponseOperationTrait extends AbstractTrait
         responsePaths.forEach(builder::addResponsePath);
 
         return builder;
+    }
+
+    public List<Topic> getSubscriptions() {
+        return subscriptions;
+    }
+
+    public Topic getPublishTopic() {
+        return publishTopic;
+    }
+
+    public List<ResponsePath> getResponsePaths() {
+        return responsePaths;
     }
 
     public static final class Provider extends AbstractTrait.Provider {
@@ -124,13 +135,10 @@ public final class RequestResponseOperationTrait extends AbstractTrait
             return new ResponsePath.Builder().topic(topic).shape(shape);
         }
 
-        public static ExamplesTrait.Example.Builder builder() {
-            return new ExamplesTrait.Example.Builder();
+        public static Builder builder() {
+            return new Builder();
         }
 
-        /**
-         * Builder used to create {@link ExamplesTrait.Example}s.
-         */
         public static final class Builder implements SmithyBuilder<ResponsePath> {
             private String topic;
             private String shape;
