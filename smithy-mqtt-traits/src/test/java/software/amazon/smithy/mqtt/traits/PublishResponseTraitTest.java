@@ -27,33 +27,34 @@ import software.amazon.smithy.model.shapes.ShapeId;
 
 import java.util.List;
 
-public class RequestResponseOperationTraitTest {
-    private static final ShapeId ID = ShapeId.from("smithy.example#Foo");
+public class PublishResponseTraitTest {
+    private static final ShapeId GET_ID = ShapeId.from("smithy.example#GetShadow");
+    private static final ShapeId UPDATE_ID = ShapeId.from("smithy.example#UpdateShadow");
 
     @Test
     public void loadsFromModel() {
         Model result = Model.assembler()
                 .discoverModels(getClass().getClassLoader())
-                .addImport(getClass().getResource("request-response-operation.smithy"))
+                .addImport(getClass().getResource("publish-response.smithy"))
                 .assemble()
                 .unwrap();
 
-        Shape fooOperation = result.expectShape(ID);
-        assertTrue(fooOperation.hasTrait(RequestResponseOperationTrait.class));
-        RequestResponseOperationTrait trait = fooOperation.expectTrait(RequestResponseOperationTrait.class);
+        Shape getOperation = result.expectShape(GET_ID);
+        assertTrue(getOperation.hasTrait(PublishResponseTrait.class));
+        PublishResponseTrait getTrait = getOperation.expectTrait(PublishResponseTrait.class);
 
-        List<Topic> subscriptions = trait.getSubscriptions();
-        assertEquals(subscriptions.size(), 1);
-        assertThat(subscriptions, contains(Topic.parse(Topic.TopicType.FILTER, "$aws/things/{thingName}/shadow/get/+")));
+        List<Topic> getSubscriptions = getTrait.getSubscriptions();
+        assertEquals(getSubscriptions.size(), 0);
 
-        assertEquals("$aws/things/{thingName}/shadow/get", trait.getPublishTopic().getTopic());
+        Shape updateOperation = result.expectShape(UPDATE_ID);
+        assertTrue(updateOperation.hasTrait(PublishResponseTrait.class));
+        PublishResponseTrait updateTrait = updateOperation.expectTrait(PublishResponseTrait.class);
 
-        List<RequestResponseOperationTrait.ResponsePath> paths = trait.getResponsePaths();
-        assertEquals(paths.size(), 2);
+        List<Topic> updateSubscriptions = updateTrait.getSubscriptions();
+        assertEquals(updateSubscriptions.size(), 2);
+        assertThat(updateSubscriptions,
+                contains(Topic.parse(Topic.TopicType.FILTER, "$aws/things/{thingName}/shadow/update/accepted"),
+                        Topic.parse(Topic.TopicType.FILTER, "$aws/things/{thingName}/shadow/update/rejected")));
 
-        assertThat(paths, contains(
-            RequestResponseOperationTrait.ResponsePath.builder().topic("$aws/things/{thingName}/shadow/get/accepted").shape("GetShadowResponse").build(),
-            RequestResponseOperationTrait.ResponsePath.builder().topic("$aws/things/{thingName}/shadow/get/rejected").shape("ErrorResponse").build()
-        ));
     }
 }

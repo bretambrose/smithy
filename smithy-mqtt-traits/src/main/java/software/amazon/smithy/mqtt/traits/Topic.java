@@ -42,6 +42,10 @@ public final class Topic {
         this.levels = Collections.unmodifiableList(levels);
     }
 
+    public static Topic parse(String topic) {
+        return parse(TopicType.TOPIC, topic);
+    }
+
     /**
      * Parses an MQTT topic and labels.
      *

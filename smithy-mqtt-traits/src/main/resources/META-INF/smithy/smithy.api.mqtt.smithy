@@ -64,47 +64,19 @@ string subscribe
 @trait(selector: "member[trait|required] :test(> :test(string, byte, short, integer, long, boolean, timestamp))")
 structure topicLabel {}
 
-@trait(selector: "member[trait|required] :test(> :test(string))")
-structure correlationToken {}
-
-/// Indicates properties of a Smithy operation representing an MQTT streaming operation.
 @trait(
     selector: "operation",
-    conflicts: ["smithy.mqtt#subscribe", "smithy.mqtt#publish", "smithy.mqtt#requestResponseOperation"],
+    conflicts: ["smithy.mqtt#subscribe"],
     breakingChanges: [{change: "any"}]
 )
-structure streamingOperation {
-    /// The topic that should be subscribed to
-    subscription: String
-}
-
-@trait(
-    selector: "operation",
-    conflicts: ["smithy.mqtt#subscribe", "smithy.mqtt#publish", "smithy.mqtt#streamingOperation"],
-    breakingChanges: [{change: "any"}]
-)
-structure requestResponseOperation {
+structure publishResponse {
 
     subscriptions: SubscriptionList
 
-    publishTopic: String
-
-    responsePaths: ResponsePathList
 }
 
 @private
 @uniqueItems
 list SubscriptionList {
     member: String
-}
-
-@private
-list ResponsePathList {
-    member: ResponsePath
-}
-
-@private
-structure ResponsePath {
-    topic: String,
-    shape: String
 }
