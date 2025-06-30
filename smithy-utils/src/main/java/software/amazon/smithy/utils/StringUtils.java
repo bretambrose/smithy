@@ -1,18 +1,7 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.utils;
 
 import java.util.Arrays;
@@ -113,8 +102,7 @@ public final class StringUtils {
      * standard programming. Instead, the class should be used as
      * {@code StringUtils.trim(" foo ");}.</p>
      */
-    private StringUtils() {
-    }
+    private StringUtils() {}
 
     // Empty checks
     //-----------------------------------------------------------------------
@@ -618,9 +606,9 @@ public final class StringUtils {
 
         final int outputLength = inputLength * repeat;
         switch (inputLength) {
-            case 1 :
+            case 1:
                 return repeat(str.charAt(0), repeat);
-            case 2 :
+            case 2:
                 final char ch0 = str.charAt(0);
                 final char ch1 = str.charAt(1);
                 final char[] output2 = new char[outputLength];
@@ -629,7 +617,7 @@ public final class StringUtils {
                     output2[i + 1] = ch1;
                 }
                 return new String(output2);
-            default :
+            default:
                 final StringBuilder buf = new StringBuilder(outputLength);
                 for (int i = 0; i < repeat; i++) {
                     buf.append(str);
@@ -649,7 +637,7 @@ public final class StringUtils {
      * </pre>
      *
      * <p>Note: this method does not support padding with
-     * <a href="http://www.unicode.org/glossary/#supplementary_character">Unicode Supplementary Characters</a>
+     * <a href="https://www.unicode.org/glossary/#supplementary_character">Unicode Supplementary Characters</a>
      * as they require a pair of {@code char}s to be represented.
      * If you are needing to support full I18N of your applications
      * consider using {@link #repeat(String, int)} instead.
@@ -1091,14 +1079,14 @@ public final class StringUtils {
      *   <td>"Here is one line of\ntext that is going\nto be wrapped after\n20 columns."</td>
      *  </tr>
      *  <tr>
-     *   <td>"Click here to jump to the commons website - http://commons.apache.org"</td>
+     *   <td>"Click here to jump to the commons website - https://commons.apache.org"</td>
      *   <td>20</td>
-     *   <td>"Click here to jump\nto the commons\nwebsite -\nhttp://commons.apache.org"</td>
+     *   <td>"Click here to jump\nto the commons\nwebsite -\nhttps://commons.apache.org"</td>
      *  </tr>
      *  <tr>
-     *   <td>"Click here, http://commons.apache.org, to jump to the commons website"</td>
+     *   <td>"Click here, https://commons.apache.org, to jump to the commons website"</td>
      *   <td>20</td>
-     *   <td>"Click here,\nhttp://commons.apache.org,\nto jump to the\ncommons website"</td>
+     *   <td>"Click here,\nhttps://commons.apache.org,\nto jump to the\ncommons website"</td>
      *  </tr>
      * </table>
      *
@@ -1166,18 +1154,18 @@ public final class StringUtils {
      *   + systemNewLine + "to be wrapped after" + systemNewLine + "20 columns."</td>
      *  </tr>
      *  <tr>
-     *   <td>"Click here to jump to the commons website - http://commons.apache.org"</td>
+     *   <td>"Click here to jump to the commons website - https://commons.apache.org"</td>
      *   <td>20</td>
      *   <td>"\n"</td>
      *   <td>false</td>
-     *   <td>"Click here to jump\nto the commons\nwebsite -\nhttp://commons.apache.org"</td>
+     *   <td>"Click here to jump\nto the commons\nwebsite -\nhttps://commons.apache.org"</td>
      *  </tr>
      *  <tr>
-     *   <td>"Click here to jump to the commons website - http://commons.apache.org"</td>
+     *   <td>"Click here to jump to the commons website - https://commons.apache.org"</td>
      *   <td>20</td>
      *   <td>"\n"</td>
      *   <td>true</td>
-     *   <td>"Click here to jump\nto the commons\nwebsite -\nhttp://commons.apach\ne.org"</td>
+     *   <td>"Click here to jump\nto the commons\nwebsite -\nhttps://commons.apach\ne.org"</td>
      *  </tr>
      * </table>
      *
@@ -1189,10 +1177,12 @@ public final class StringUtils {
      * @return a line with newlines inserted, <code>null</code> if null input
      * @see <a href="https://github.com/apache/commons-text/blob/c3b30de7352f8af85455d9b18778c9cd609ceb1d/src/main/java/org/apache/commons/text/WordUtils.java">Source</a>
      */
-    public static String wrap(final String str,
+    public static String wrap(
+            final String str,
             final int wrapLength,
             final String newLineStr,
-            final boolean wrapLongWords) {
+            final boolean wrapLongWords
+    ) {
         return wrap(str, wrapLength, newLineStr, wrapLongWords, " ");
     }
 
@@ -1255,20 +1245,20 @@ public final class StringUtils {
      *   + systemNewLine + "to be wrapped after" + systemNewLine + "20 columns."</td>
      *  </tr>
      *  <tr>
-     *   <td>"Click here to jump to the commons website - http://commons.apache.org"</td>
+     *   <td>"Click here to jump to the commons website - https://commons.apache.org"</td>
      *   <td>20</td>
      *   <td>"\n"</td>
      *   <td>false</td>
      *   <td>" "</td>
-     *   <td>"Click here to jump\nto the commons\nwebsite -\nhttp://commons.apache.org"</td>
+     *   <td>"Click here to jump\nto the commons\nwebsite -\nhttps://commons.apache.org"</td>
      *  </tr>
      *  <tr>
-     *   <td>"Click here to jump to the commons website - http://commons.apache.org"</td>
+     *   <td>"Click here to jump to the commons website - https://commons.apache.org"</td>
      *   <td>20</td>
      *   <td>"\n"</td>
      *   <td>true</td>
      *   <td>" "</td>
-     *   <td>"Click here to jump\nto the commons\nwebsite -\nhttp://commons.apach\ne.org"</td>
+     *   <td>"Click here to jump\nto the commons\nwebsite -\nhttps://commons.apach\ne.org"</td>
      *  </tr>
      *  <tr>
      *   <td>"flammable/inflammable"</td>
@@ -1289,11 +1279,13 @@ public final class StringUtils {
      * @return a line with newlines inserted, <code>null</code> if null input
      * @see <a href="https://github.com/apache/commons-text/blob/c3b30de7352f8af85455d9b18778c9cd609ceb1d/src/main/java/org/apache/commons/text/WordUtils.java">Source</a>
      */
-    public static String wrap(final String str,
+    public static String wrap(
+            final String str,
             int wrapLength,
             String newLineStr,
             final boolean wrapLongWords,
-            String wrapOn) {
+            String wrapOn
+    ) {
         if (str == null) {
             return null;
         }
@@ -1315,7 +1307,8 @@ public final class StringUtils {
         while (offset < inputLineLength) {
             int spaceToWrapAt = -1;
             Matcher matcher = patternToWrapOn.matcher(str.substring(
-                    offset, Math.min((int) Math.min(Integer.MAX_VALUE, offset + wrapLength + 1L), inputLineLength)));
+                    offset,
+                    Math.min((int) Math.min(Integer.MAX_VALUE, offset + wrapLength + 1L), inputLineLength)));
             if (matcher.find()) {
                 if (matcher.start() == 0) {
                     matcherSize = matcher.end() - matcher.start();
@@ -1442,8 +1435,8 @@ public final class StringUtils {
      * This implementation follows from Algorithms on Strings, Trees and
      * Sequences by Dan Gusfield and Chas Emerick's implementation of the
      * Levenshtein distance algorithm from <a
-     * href="http://www.merriampark.com/ld.htm"
-     * >http://www.merriampark.com/ld.htm</a>
+     * href="https://www.merriampark.com/ld.htm"
+     * >https://www.merriampark.com/ld.htm</a>
      * </p>
      *
      * <pre>
@@ -1570,8 +1563,10 @@ public final class StringUtils {
 
             // compute stripe indices, constrain to array size
             final int min = Math.max(1, j - threshold);
-            final int max = j > Integer.MAX_VALUE - threshold ? n : Math.min(
-                    n, j + threshold);
+            final int max = j > Integer.MAX_VALUE - threshold ? n
+                    : Math.min(
+                            n,
+                            j + threshold);
 
             // ignore entry left of leftmost
             if (min > 1) {

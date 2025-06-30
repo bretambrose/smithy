@@ -2,12 +2,12 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.rulesengine.aws.language.functions.partition;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import software.amazon.smithy.model.FromSourceLocation;
 import software.amazon.smithy.model.SourceLocation;
 import software.amazon.smithy.model.node.Node;
@@ -16,7 +16,6 @@ import software.amazon.smithy.model.node.ToNode;
 import software.amazon.smithy.rulesengine.language.RulesComponentBuilder;
 import software.amazon.smithy.utils.BuilderRef;
 import software.amazon.smithy.utils.ListUtils;
-import software.amazon.smithy.utils.SmithyBuilder;
 import software.amazon.smithy.utils.SmithyUnstableApi;
 import software.amazon.smithy.utils.ToSmithyBuilder;
 
@@ -36,6 +35,7 @@ public final class Partition implements ToSmithyBuilder<Partition>, FromSourceLo
     private final Map<String, RegionOverride> regions;
     private final PartitionOutputs outputs;
     private final SourceLocation sourceLocation;
+    private Pattern compiledRegionRegex;
 
     private Partition(Builder builder) {
         this.sourceLocation = builder.getSourceLocation();
@@ -67,10 +67,10 @@ public final class Partition implements ToSmithyBuilder<Partition>, FromSourceLo
 
         objectNode.expectStringMember(ID, builder::id);
         objectNode.getStringMember(REGION_REGEX, builder::regionRegex);
-        objectNode.getObjectMember(REGIONS, regionsNode -> regionsNode.getMembers().forEach((k, v) ->
-                builder.putRegion(k.toString(), RegionOverride.fromNode(v))));
-        objectNode.getObjectMember(OUTPUTS, outputsNode ->
-                builder.outputs(PartitionOutputs.fromNode(outputsNode)));
+        objectNode.getObjectMember(REGIONS,
+                regionsNode -> regionsNode.getMembers()
+                        .forEach((k, v) -> builder.putRegion(k.toString(), RegionOverride.fromNode(v))));
+        objectNode.getObjectMember(OUTPUTS, outputsNode -> builder.outputs(PartitionOutputs.fromNode(outputsNode)));
 
         return builder.build();
     }
@@ -91,6 +91,20 @@ public final class Partition implements ToSmithyBuilder<Partition>, FromSourceLo
      */
     public String getRegionRegex() {
         return regionRegex;
+    }
+
+    /**
+     * Get the compiled region regular expression of the partition.
+     *
+     * @return the compiled region regex.
+     */
+    public Pattern getCompiledRegionRegex() {
+        Pattern result = compiledRegionRegex;
+        if (result == null) {
+            result = Pattern.compile(regionRegex);
+            compiledRegionRegex = result;
+        }
+        return result;
     }
 
     /**
@@ -117,7 +131,7 @@ public final class Partition implements ToSmithyBuilder<Partition>, FromSourceLo
     }
 
     @Override
-    public SmithyBuilder<Partition> toBuilder() {
+    public Builder toBuilder() {
         return new Builder(getSourceLocation())
                 .id(id)
                 .regionRegex(regionRegex)
@@ -150,8 +164,8 @@ public final class Partition implements ToSmithyBuilder<Partition>, FromSourceLo
         }
         Partition partition = (Partition) o;
         return Objects.equals(id, partition.id) && Objects.equals(regionRegex, partition.regionRegex)
-               && Objects.equals(regions, partition.regions)
-               && Objects.equals(outputs, partition.outputs);
+                && Objects.equals(regions, partition.regions)
+                && Objects.equals(outputs, partition.outputs);
     }
 
     @Override

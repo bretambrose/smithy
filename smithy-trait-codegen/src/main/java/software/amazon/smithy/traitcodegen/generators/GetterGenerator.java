@@ -2,9 +2,9 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.traitcodegen.generators;
 
+import java.util.Collections;
 import java.util.Optional;
 import software.amazon.smithy.codegen.core.Symbol;
 import software.amazon.smithy.codegen.core.SymbolProvider;
@@ -52,7 +52,9 @@ final class GetterGenerator implements Runnable {
 
         @Override
         public Void documentShape(DocumentShape shape) {
-            writer.openBlock("public $T getValue() {", "}", Node.class,
+            writer.openBlock("public $T getValue() {",
+                    "}",
+                    Node.class,
                     () -> writer.writeWithNoFormatting("return toNode();"));
             writer.newLine();
             return null;
@@ -86,7 +88,8 @@ final class GetterGenerator implements Runnable {
         public Void enumShape(EnumShape shape) {
             Symbol shapeSymbol = symbolProvider.toSymbol(shape);
             generateEnumValueGetterDocstring(shapeSymbol);
-            writer.openBlock("public $B getEnumValue() {", "}",
+            writer.openBlock("public $B getEnumValue() {",
+                    "}",
                     shapeSymbol,
                     () -> writer.write("return $B.from(getValue());", shapeSymbol));
             writer.newLine();
@@ -96,14 +99,17 @@ final class GetterGenerator implements Runnable {
         @Override
         public Void intEnumShape(IntEnumShape shape) {
             writer.pushState(new GetterSection(shape));
-            writer.openBlock("public $T getValue() {", "}",
-                    Integer.class, () -> writer.write("return value;"));
+            writer.openBlock("public $T getValue() {",
+                    "}",
+                    Integer.class,
+                    () -> writer.write("return value;"));
             writer.popState();
             writer.newLine();
 
             Symbol shapeSymbol = symbolProvider.toSymbol(shape);
             generateEnumValueGetterDocstring(shapeSymbol);
-            writer.openBlock("public $B getEnumValue() {", "}",
+            writer.openBlock("public $B getEnumValue() {",
+                    "}",
                     shapeSymbol,
                     () -> writer.write("return $B.from(value);", shapeSymbol));
             writer.newLine();
@@ -117,24 +123,34 @@ final class GetterGenerator implements Runnable {
                 // then do not wrap return in an Optional
                 writer.pushState(new GetterSection(member));
                 if (TraitCodegenUtils.isNullableMember(member)) {
-                    writer.openBlock("public $T<$T> get$U() {", "}",
-                            Optional.class, symbolProvider.toSymbol(member), symbolProvider.toMemberName(member),
+                    writer.openBlock("public $T<$T> get$U() {",
+                            "}",
+                            Optional.class,
+                            symbolProvider.toSymbol(member),
+                            symbolProvider.toMemberName(member),
                             () -> writer.write("return $T.ofNullable($L);",
-                                    Optional.class, symbolProvider.toMemberName(member)));
+                                    Optional.class,
+                                    symbolProvider.toMemberName(member)));
                     writer.popState();
                     writer.newLine();
 
                     // If the member targets a collection shape and is optional then generate an unwrapped
                     // getter as a convenience method as well.
                     Shape target = model.expectShape(member.getTarget());
-                    if (target.isListShape() || target.isMapShape()) {
-                        writer.openBlock("public $T get$UOrEmpty() {", "}",
+                    boolean isListShape = target.isListShape();
+                    if (isListShape || target.isMapShape()) {
+                        writer.openBlock("public $T get$UOrEmpty() {",
+                                "}",
                                 symbolProvider.toSymbol(member),
                                 symbolProvider.toMemberName(member),
-                                () -> writer.write("return $L;", symbolProvider.toMemberName(member)));
+                                () -> writer.write("return $1L == null ? $2T.$3L() : $1L;",
+                                        symbolProvider.toMemberName(member),
+                                        Collections.class,
+                                        isListShape ? "emptyList" : "emptyMap"));
                     }
                 } else {
-                    writer.openBlock("public $T get$U() {", "}",
+                    writer.openBlock("public $T get$U() {",
+                            "}",
                             symbolProvider.toSymbol(member),
                             symbolProvider.toMemberName(member),
                             () -> writer.write("return $L;", symbolProvider.toMemberName(member)));
@@ -165,16 +181,20 @@ final class GetterGenerator implements Runnable {
 
         private void generateValuesGetter(Shape shape) {
             writer.pushState(new GetterSection(shape));
-            writer.openBlock("public $B getValues() {", "}",
-                    symbolProvider.toSymbol(shape), () -> writer.write("return values;"));
+            writer.openBlock("public $B getValues() {",
+                    "}",
+                    symbolProvider.toSymbol(shape),
+                    () -> writer.write("return values;"));
             writer.popState();
             writer.newLine();
         }
 
         private void generateValueGetter(Shape shape) {
             writer.pushState(new GetterSection(shape));
-            writer.openBlock("public $B getValue() {", "}",
-                    symbolProvider.toSymbol(shape), () -> writer.write("return value;"));
+            writer.openBlock("public $B getValue() {",
+                    "}",
+                    symbolProvider.toSymbol(shape),
+                    () -> writer.write("return value;"));
             writer.popState();
             writer.newLine();
         }

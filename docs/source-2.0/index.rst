@@ -147,9 +147,21 @@ Read more
     spec/index
     trait-index
     guides/index
+    tutorials/index
     Additional specs <additional-specs/index>
     aws/index
-    ts-ssdk/index
+
+.. toctree::
+    :caption: Languages
+    :maxdepth: 1
+
+    languages/java/index
+    languages/typescript/index
+    languages/rust/index
+    languages/python/index
+    languages/kotlin/index
+    languages/golang/index
+    languages/scala/index
 
 .. toctree::
     :caption: Project

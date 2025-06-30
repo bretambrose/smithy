@@ -1,18 +1,7 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.linters;
 
 import java.util.ArrayList;
@@ -66,8 +55,7 @@ public final class MissingSensitiveTraitValidator extends AbstractValidator {
             "ssn",
             "tax payer",
             "telephone",
-            "zip code"
-    );
+            "zip code");
 
     private final WordBoundaryMatcher wordMatcher;
 
@@ -143,9 +131,9 @@ public final class MissingSensitiveTraitValidator extends AbstractValidator {
                 Shape containingShape = model.expectShape(memberShape.getContainer());
                 Shape targetShape = model.expectShape(memberShape.getTarget());
 
-                if (!containingShape.hasTrait(SensitiveTrait.class)
+                if (!containingShape.hasTrait(SensitiveTrait.ID)
                         && !containingShape.isEnumShape()
-                        && !targetShape.hasTrait(SensitiveTrait.class)) {
+                        && !targetShape.hasTrait(SensitiveTrait.ID)) {
                     Optional<ValidationEvent> optionalValidationEvent =
                             detectSensitiveTerms(memberShape.getMemberName(), memberShape);
                     optionalValidationEvent.ifPresent(validationEvents::add);
@@ -153,7 +141,7 @@ public final class MissingSensitiveTraitValidator extends AbstractValidator {
             } else if (!shape.isOperationShape()
                     && !shape.isServiceShape()
                     && !shape.isResourceShape()
-                    && !shape.hasTrait(SensitiveTrait.class)) {
+                    && !shape.hasTrait(SensitiveTrait.ID)) {
                 Optional<ValidationEvent> optionalValidationEvent =
                         detectSensitiveTerms(shape.toShapeId().getName(), shape);
                 optionalValidationEvent.ifPresent(validationEvents::add);
@@ -169,9 +157,10 @@ public final class MissingSensitiveTraitValidator extends AbstractValidator {
         if (matchedTerm.isPresent()) {
             String message = shape.isMemberShape()
                     ? String.format("This member possibly contains sensitive data but neither the enclosing nor target"
-                    + " shape are marked with the sensitive trait (based on the presence of '%s')", matchedTerm.get())
+                            + " shape are marked with the sensitive trait (based on the presence of '%s')",
+                            matchedTerm.get())
                     : String.format("This shape possibly contains sensitive data but is not marked "
-                    + "with the sensitive trait (based on the presence of '%s')", matchedTerm.get());
+                            + "with the sensitive trait (based on the presence of '%s')", matchedTerm.get());
             return Optional.of(warning(shape, message));
         } else {
             return Optional.empty();

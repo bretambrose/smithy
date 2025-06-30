@@ -402,10 +402,11 @@ Value type
     ``map`` of IAM identifiers to condition key ``structure``
 
 The ``aws.iam#defineConditionKeys`` trait defines additional condition keys
-that appear within a service. Keys in the map must be valid IAM identifiers,
-meaning they must adhere to the following regular expression:
-``"^([A-Za-z0-9][A-Za-z0-9-\\.]{0,62}:[^:]+)$"``.
-Each condition key structure supports the following members:
+that appear within a service. Keys in the map must be valid IAM identifiers
+or names of condition keys, meaning they must adhere to the following regular
+expression: ``"^(([A-Za-z0-9][A-Za-z0-9-\\.]{0,62}:)?[^:\\s]+)$"``. If only a
+condition key name is specified, the service is inferred to be the
+``arnNamespace``. Each condition key structure supports the following members:
 
 .. list-table::
     :header-rows: 1
@@ -432,6 +433,11 @@ Each condition key structure supports the following members:
       - ``string``
       - A relative URL path that defines more information about the condition key
         within a set of IAM-related documentation.
+    * - required
+      - ``boolean``
+      - Defines whether a service resolved condition key is required. Not 
+        applicable to request resolved condition keys, as the native 
+        :ref:`required-trait` trait MUST be used on the member directly.
 
 .. code-block:: smithy
 
@@ -448,7 +454,14 @@ Each condition key structure supports the following members:
             type: "String"
             documentation: "The Bar string"
             externalDocumentation: "http://example.com"
-        })
+        },
+        "myservice:Baz": {
+            type: "String"
+            documentation: "The Baz string"
+            externalDocumentation: "http://baz.com"
+            required: true
+        }
+    )
     service MyService {
         version: "2017-02-11"
         resources: [MyResource]
@@ -478,9 +491,14 @@ Condition keys derived automatically can be applied to a resource or operation
 explicitly. Condition keys applied this way MUST be either :ref:`inferred <deriving-condition-keys>`
 or explicitly defined via the :ref:`aws.iam#defineConditionKeys-trait` trait.
 
+Values in the list MUST be valid IAM identifiers or names of condition keys,
+meaning they must adhere to the following regular expression:
+``"^(([A-Za-z0-9][A-Za-z0-9-\\.]{0,62}:)?[^:\\s]+)$"``. If only a condition key
+name is specified, the service is inferred to be the ``arnNamespace``.
+
 The following example's ``MyResource`` resource has the
-``myservice:MyResourceFoo`` and  ``myservice:Bar`` condition keys. The
-``MyOperation`` operation has the ``aws:region`` condition key.
+``myservice:MyResourceFoo``, ``myservice:Bar``, and ``myservice:Baz`` condition
+keys. The ``MyOperation`` operation has the ``aws:region`` condition key.
 
 .. code-block:: smithy
 
@@ -493,13 +511,16 @@ The following example's ``MyResource`` resource has the
     use aws.iam#conditionKeys
 
     @service(sdkId: "My Value", arnNamespace: "myservice")
-    @defineConditionKeys("myservice:Bar": { type: "String" })
+    @defineConditionKeys(
+        "myservice:Bar": { type: "String" }
+        "myservice:Baz": { type: "String" }
+    )
     service MyService {
         version: "2017-02-11"
         resources: [MyResource]
     }
 
-    @conditionKeys(["myservice:Bar"])
+    @conditionKeys(["myservice:Bar", "Baz"])
     resource MyResource {
         identifiers: {foo: String}
         operations: [MyOperation]
@@ -534,6 +555,11 @@ MUST also be defined via the :ref:`aws.iam#defineConditionKeys-trait` trait.
 :ref:`Inferred resource condition keys <deriving-condition-keys>` MUST NOT be
 included with the ``serviceResolvedConditionKeys`` trait.
 
+Values in the list MUST be valid IAM identifiers or names of condition keys,
+meaning they must adhere to the following regular expression:
+``"^(([A-Za-z0-9][A-Za-z0-9-\\.]{0,62}:)?[^:\\s]+)$"``. If only a condition key
+name is specified, the service is inferred to be the ``arnNamespace``.
+
 The following example defines two service-specific condition keys:
 
 * ``myservice:ActionContextKey1`` is expected to be resolved by the service.
@@ -552,8 +578,9 @@ The following example defines two service-specific condition keys:
     @defineConditionKeys(
         "myservice:ActionContextKey1": { type: "String" },
         "myservice:ActionContextKey2": { type: "String" }
+        "myservice:AnotherContextKey": { type: "String" }
     )
-    @serviceResolvedConditionKeys(["myservice:ActionContextKey1"])
+    @serviceResolvedConditionKeys(["myservice:ActionContextKey1", "AnotherContextKey"])
     @service(sdkId: "My Value", arnNamespace: "myservice")
     service MyService {
         version: "2018-05-10"
@@ -578,6 +605,15 @@ Members not annotated with the ``conditionKeyValue`` trait, default to the
 condition keys defined with the ``conditionKeyValue`` trait MUST also be
 defined via the :ref:`aws.iam#defineConditionKeys-trait` trait.
 
+Any ``conditionKeyValue`` trait applied to a member that is not a top-level
+input member to an operation will be ignored. Multiple members within a
+top-level input structure MUST NOT supply the value for the same condition key.
+
+The value MUST be a valid IAM identifier or name of a condition key,
+meaning it must adhere to the following regular expression:
+``"^(([A-Za-z0-9][A-Za-z0-9-\\.]{0,62}:)?[^:\\s]+)$"``. If only a condition key
+name is specified, the service is inferred to be the ``arnNamespace``.
+
 In the input shape for ``OperationA``, the trait ``conditionKeyValue``
 explicitly binds ``ActionContextKey1`` to the field ``key``.
 
@@ -594,6 +630,7 @@ explicitly binds ``ActionContextKey1`` to the field ``key``.
 
     @defineConditionKeys(
         "myservice:ActionContextKey1": { type: "String" }
+        "myservice:AnotherContextKey": { type: "String" }
     )
     @service(sdkId: "My Value", arnNamespace: "myservice")
     service MyService {
@@ -605,6 +642,9 @@ explicitly binds ``ActionContextKey1`` to the field ``key``.
     operation OperationA {
         input := {
             @conditionKeyValue("myservice:ActionContextKey1")
+            key: String
+
+            @conditionKeyValue("AnotherContextKey")
             key: String
         }
         output := {

@@ -2,7 +2,6 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.traitcodegen;
 
 import java.util.Collections;
@@ -30,7 +29,6 @@ import software.amazon.smithy.utils.SmithyUnstableApi;
  */
 @SmithyUnstableApi
 public final class TraitCodegenSettings {
-    private static final String SMITHY_MODEL_NAMESPACE = "software.amazon.smithy";
     private static final String SMITHY_API_NAMESPACE = "smithy";
 
     private final String packageName;
@@ -49,15 +47,13 @@ public final class TraitCodegenSettings {
      * @param excludeTags smithy tags to exclude from trait code generation. Traits with these tags will be
      *                    ignored when generating java classes.
      */
-    TraitCodegenSettings(String packageName,
-                         String smithyNamespace,
-                         List<String> headerLines,
-                         List<String> excludeTags
+    TraitCodegenSettings(
+            String packageName,
+            String smithyNamespace,
+            List<String> headerLines,
+            List<String> excludeTags
     ) {
         this.packageName = Objects.requireNonNull(packageName);
-        if (packageName.startsWith(SMITHY_MODEL_NAMESPACE)) {
-            throw new IllegalArgumentException("The `software.amazon.smithy` package namespace is reserved.");
-        }
         this.smithyNamespace = Objects.requireNonNull(smithyNamespace);
         if (smithyNamespace.startsWith(SMITHY_API_NAMESPACE)) {
             throw new IllegalArgumentException("The `smithy` namespace is reserved.");
@@ -80,8 +76,7 @@ public final class TraitCodegenSettings {
                         .getElementsAs(el -> el.expectStringNode().getValue()),
                 node.getArrayMember("excludeTags")
                         .map(n -> n.getElementsAs(el -> el.expectStringNode().getValue()))
-                        .orElse(Collections.emptyList())
-        );
+                        .orElse(Collections.emptyList()));
     }
 
     /**

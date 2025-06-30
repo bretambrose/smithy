@@ -2,7 +2,6 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.traitcodegen.generators;
 
 import java.util.function.Consumer;
@@ -27,7 +26,7 @@ import software.amazon.smithy.utils.SmithyInternalApi;
 public final class ShapeGenerator implements Consumer<GenerateTraitDirective> {
     @Override
     public void accept(GenerateTraitDirective directive) {
-        if (directive.shape().hasTrait(TraitDefinition.class)) {
+        if (directive.shape().hasTrait(TraitDefinition.ID)) {
             new TraitGenerator().accept(directive);
         } else {
             directive.shape().accept(new NestedShapeGenerator(directive));
@@ -75,7 +74,7 @@ public final class ShapeGenerator implements Consumer<GenerateTraitDirective> {
         @Override
         public Void memberShape(MemberShape shape) {
             throw new IllegalArgumentException("NestedShapeGenerator should not visit member shapes. "
-             + " Attempted to visit " + shape);
+                    + " Attempted to visit " + shape);
         }
     }
 }

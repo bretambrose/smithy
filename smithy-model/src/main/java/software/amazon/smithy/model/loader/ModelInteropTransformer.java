@@ -1,18 +1,7 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.loader;
 
 import java.util.ArrayList;
@@ -117,7 +106,7 @@ final class ModelInteropTransformer {
             Node defaultValue = getDefaultValueOfType(member, target.getType());
             builder.addTrait(new DefaultTrait(defaultValue));
             shapeUpgrades.add(builder.build());
-        } else if (member.hasTrait(BoxTrait.class)) {
+        } else if (member.hasTrait(BoxTrait.ID)) {
             // Add a default trait to the member set to null to indicate it was boxed in v1.
             MemberShape.Builder builder = member.toBuilder();
             builder.addTrait(new DefaultTrait(new NullNode(member.getSourceLocation())));
@@ -129,10 +118,10 @@ final class ModelInteropTransformer {
         // Only when the targeted shape had a default value by default in v1 or if
         // the member targets a streaming blob, which implies a default in 2.0
         return (HAD_DEFAULT_VALUE_IN_1_0.contains(target.getType()) || streamingBlobNeedsDefault(member, target))
-            // Don't re-add the @default trait
-            && !member.hasTrait(DefaultTrait.ID)
-            // Don't add a @default trait if the member or target are considered boxed in v1.
-            && memberAndTargetAreNotAlreadyExplicitlyBoxed(member, target);
+                // Don't re-add the @default trait
+                && !member.hasTrait(DefaultTrait.ID)
+                // Don't add a @default trait if the member or target are considered boxed in v1.
+                && memberAndTargetAreNotAlreadyExplicitlyBoxed(member, target);
     }
 
     private boolean streamingBlobNeedsDefault(MemberShape member, Shape target) {
@@ -165,7 +154,7 @@ final class ModelInteropTransformer {
 
     private boolean v2ShapeNeedsBoxTrait(MemberShape member, Shape target) {
         return isMemberInherentlyBoxedInV1(member)
-               && memberAndTargetAreNotAlreadyExplicitlyBoxed(member, target);
+                && memberAndTargetAreNotAlreadyExplicitlyBoxed(member, target);
     }
 
     // Only apply box to members where the trait can be applied.
@@ -180,7 +169,7 @@ final class ModelInteropTransformer {
     // The addedDefault trait implies that a member did not previously have a default, and a default value
     // was added later. In this case, naive box implementation can assume the member is boxed.
     private boolean isMemberInherentlyBoxedInV1(MemberShape member) {
-        return member.hasTrait(AddedDefaultTrait.class);
+        return member.hasTrait(AddedDefaultTrait.ID);
     }
 
     // If the member has a default trait set to the zero value, then consider the member

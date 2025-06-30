@@ -1,18 +1,7 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.transform;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -20,8 +9,10 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.not;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,9 +43,11 @@ import software.amazon.smithy.model.shapes.StringShape;
 import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.shapes.UnionShape;
 import software.amazon.smithy.model.traits.AuthDefinitionTrait;
+import software.amazon.smithy.model.traits.ErrorTrait;
 import software.amazon.smithy.model.traits.MixinTrait;
 import software.amazon.smithy.model.traits.ProtocolDefinitionTrait;
 import software.amazon.smithy.model.traits.ReadonlyTrait;
+import software.amazon.smithy.utils.ListUtils;
 
 public class RemoveShapesTest {
 
@@ -194,6 +187,31 @@ public class RemoveShapesTest {
     }
 
     @Test
+    public void removesOperationComponentsWhenStructureRemoved() {
+        ShapeId operationId = ShapeId.fromParts("ns.foo", "C");
+        StructureShape a = StructureShape.builder().id("ns.foo#A").build();
+        StructureShape b = StructureShape.builder()
+                .id("ns.foo#A")
+                .addTrait(new ErrorTrait("client"))
+                .build();
+        OperationShape c = OperationShape.builder()
+                .id(operationId)
+                .input(a)
+                .output(a)
+                .addError(b)
+                .build();
+
+        Model model = Model.builder().addShapes(a, b, c).build();
+        ModelTransformer transformer = ModelTransformer.create();
+        Model result = transformer.removeShapes(model, ListUtils.of(a, b));
+
+        assertEquals(1, result.shapes().count());
+        assertFalse(result.expectShape(operationId, OperationShape.class).getInput().isPresent());
+        assertFalse(result.expectShape(operationId, OperationShape.class).getOutput().isPresent());
+        assertTrue(result.expectShape(operationId, OperationShape.class).getErrors().isEmpty());
+    }
+
+    @Test
     public void removesOperationsFromResourcesWhenOperationRemoved() {
         ResourceShape container = ResourceShape.builder()
                 .id(ShapeId.from("ns.foo#Container"))
@@ -216,7 +234,7 @@ public class RemoveShapesTest {
         assertThat(result.getShape(container.getId()), Matchers.not(Optional.empty()));
         assertThat(result.getShape(c.getId()), Matchers.not(Optional.empty()));
         assertThat(result.expectShape(container.getId()).asResourceShape().get().getOperations(),
-                   Matchers.contains(c.getId()));
+                Matchers.contains(c.getId()));
     }
 
     @Test
@@ -227,7 +245,6 @@ public class RemoveShapesTest {
                 .unwrap();
         ShapeId removedId = ShapeId.from("ns.foo#bar");
         Shape removedShape = model.expectShape(removedId);
-
 
         ModelTransformer transformer = ModelTransformer.create();
         Model result = transformer.removeShapes(model, Collections.singletonList(removedShape));
@@ -344,18 +361,18 @@ public class RemoveShapesTest {
 
     public static Collection<Object[]> removeMixinData() {
         return Arrays.asList(new Object[][] {
-            { "without-a.smithy", new String[] {"A"}},
-            { "without-a2.smithy", new String[] {"A2"}},
-            { "without-a3.smithy", new String[] {"A3"}},
-            { "without-a-a2.smithy", new String[] {"A", "A2"}},
-            { "without-a-a2-a3.smithy", new String[] {"A", "A2", "A3"}},
-            { "without-a-a2-a3-b-b2-b3.smithy", new String[] {"A", "A2", "A3", "B", "B2", "B3"}},
-            { "without-a-b.smithy", new String[] {"A", "B"}},
-            { "without-b.smithy", new String[] {"B"}},
-            { "without-b2.smithy", new String[] {"B2"}},
-            { "without-b3.smithy", new String[] {"B3"}},
-            { "without-c.smithy", new String[] {"C"}},
-            { "without-d.smithy", new String[] {"D"}}
+                {"without-a.smithy", new String[] {"A"}},
+                {"without-a2.smithy", new String[] {"A2"}},
+                {"without-a3.smithy", new String[] {"A3"}},
+                {"without-a-a2.smithy", new String[] {"A", "A2"}},
+                {"without-a-a2-a3.smithy", new String[] {"A", "A2", "A3"}},
+                {"without-a-a2-a3-b-b2-b3.smithy", new String[] {"A", "A2", "A3", "B", "B2", "B3"}},
+                {"without-a-b.smithy", new String[] {"A", "B"}},
+                {"without-b.smithy", new String[] {"B"}},
+                {"without-b2.smithy", new String[] {"B2"}},
+                {"without-b3.smithy", new String[] {"B3"}},
+                {"without-c.smithy", new String[] {"C"}},
+                {"without-d.smithy", new String[] {"D"}}
         });
     }
 }

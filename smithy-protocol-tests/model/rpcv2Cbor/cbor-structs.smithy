@@ -13,7 +13,8 @@ use smithy.test#httpResponseTests
         documentation: "Serializes simple scalar properties",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
-            "Content-Type": "application/cbor"
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
         }
         requireHeaders: [
             "Content-Length"
@@ -21,12 +22,12 @@ use smithy.test#httpResponseTests
         method: "POST",
         bodyMediaType: "application/cbor",
         uri: "/service/RpcV2Protocol/operation/SimpleScalarProperties",
-        body: "v2lieXRlVmFsdWUFa2RvdWJsZVZhbHVl+z/+OVgQYk3TcWZhbHNlQm9vbGVhblZhbHVl9GpmbG9hdFZhbHVl+kDz989saW50ZWdlclZhbHVlGQEAaWxvbmdWYWx1ZRkmkWpzaG9ydFZhbHVlGSaqa3N0cmluZ1ZhbHVlZnNpbXBsZXB0cnVlQm9vbGVhblZhbHVl9WlibG9iVmFsdWVDZm9v/w=="
+        body: "v2lieXRlVmFsdWUFa2RvdWJsZVZhbHVl+z/+OVgQYk3TcWZhbHNlQm9vbGVhblZhbHVl9GpmbG9hdFZhbHVl+kD0AABsaW50ZWdlclZhbHVlGQEAaWxvbmdWYWx1ZRkmkWpzaG9ydFZhbHVlGSaqa3N0cmluZ1ZhbHVlZnNpbXBsZXB0cnVlQm9vbGVhblZhbHVl9WlibG9iVmFsdWVDZm9v/w==",
         params: {
             byteValue: 5,
             doubleValue: 1.889,
             falseBooleanValue: false,
-            floatValue: 7.624,
+            floatValue: 7.625,
             integerValue: 256,
             longValue: 9873,
             shortValue: 9898,
@@ -44,7 +45,8 @@ use smithy.test#httpResponseTests
             a key encoded using an indefinite length string.""",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
-            "Content-Type": "application/cbor"
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
         }
         requireHeaders: [
             "Content-Length"
@@ -52,12 +54,12 @@ use smithy.test#httpResponseTests
         method: "POST",
         bodyMediaType: "application/cbor",
         uri: "/service/RpcV2Protocol/operation/SimpleScalarProperties",
-        body: "qmlieXRlVmFsdWUFf2Zkb3VibGVlVmFsdWX/+z/+OVgQYk3Tf2VmYWxzZWdCb29sZWFuZVZhbHVl//RqZmxvYXRWYWx1ZfpA8/fPbGludGVnZXJWYWx1ZRkBAGlsb25nVmFsdWUZJpFqc2hvcnRWYWx1ZRkmqn9mc3RyaW5nZVZhbHVl/2ZzaW1wbGVwdHJ1ZUJvb2xlYW5WYWx1ZfVpYmxvYlZhbHVlQ2Zvbw=="
+        body: "qmlieXRlVmFsdWUFf2Zkb3VibGVlVmFsdWX/+z/+OVgQYk3Tf2VmYWxzZWdCb29sZWFuZVZhbHVl//RqZmxvYXRWYWx1ZfpA9AAAbGludGVnZXJWYWx1ZRkBAGlsb25nVmFsdWUZJpFqc2hvcnRWYWx1ZRkmqn9mc3RyaW5nZVZhbHVl/2ZzaW1wbGVwdHJ1ZUJvb2xlYW5WYWx1ZfVpYmxvYlZhbHVlQ2Zvbw==",
         params: {
             byteValue: 5,
             doubleValue: 1.889,
             falseBooleanValue: false,
-            floatValue: 7.624,
+            floatValue: 7.625,
             integerValue: 256,
             longValue: 9873,
             shortValue: 9898,
@@ -77,7 +79,8 @@ use smithy.test#httpResponseTests
         bodyMediaType: "application/cbor",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
-            "Content-Type": "application/cbor"
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
         }
         requireHeaders: [
             "Content-Length"
@@ -97,7 +100,8 @@ use smithy.test#httpResponseTests
         bodyMediaType: "application/cbor",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
-            "Content-Type": "application/cbor"
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
         }
         requireHeaders: [
             "Content-Length"
@@ -111,7 +115,8 @@ use smithy.test#httpResponseTests
         documentation: "Supports handling NaN float values.",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
-            "Content-Type": "application/cbor"
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
         }
         requireHeaders: [
             "Content-Length"
@@ -131,7 +136,8 @@ use smithy.test#httpResponseTests
         documentation: "Supports handling Infinity float values.",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
-            "Content-Type": "application/cbor"
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
         }
         requireHeaders: [
             "Content-Length"
@@ -151,7 +157,8 @@ use smithy.test#httpResponseTests
         documentation: "Supports handling Infinity float values.",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
-            "Content-Type": "application/cbor"
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
         }
         requireHeaders: [
             "Content-Length"
@@ -171,7 +178,8 @@ use smithy.test#httpResponseTests
         documentation: "The server should be capable of deserializing indefinite length text strings.",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
-            "Content-Type": "application/cbor"
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
         }
         requireHeaders: [
             "Content-Length"
@@ -191,7 +199,8 @@ use smithy.test#httpResponseTests
         documentation: "The server should be capable of deserializing indefinite length byte strings.",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
-            "Content-Type": "application/cbor"
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
         }
         requireHeaders: [
             "Content-Length"
@@ -211,7 +220,8 @@ use smithy.test#httpResponseTests
         documentation: "Supports upcasting from a smaller byte representation of the same data type.",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
-            "Content-Type": "application/cbor"
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
         }
         requireHeaders: [
             "Content-Length"
@@ -238,6 +248,36 @@ use smithy.test#httpResponseTests
             generated against an older Smithy model.""",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
+        }
+        requireHeaders: [
+            "Content-Length"
+        ],
+        method: "POST",
+        bodyMediaType: "application/cbor",
+        uri: "/service/RpcV2Protocol/operation/SimpleScalarProperties",
+        body: "v2lieXRlVmFsdWUFa2RvdWJsZVZhbHVl+z/+OVgQYk3TcWZhbHNlQm9vbGVhblZhbHVl9GpmbG9hdFZhbHVl+kD0AABrZXh0cmFPYmplY3S/c2luZGVmaW5pdGVMZW5ndGhNYXC/a3dpdGhBbkFycmF5nwECA///cWRlZmluaXRlTGVuZ3RoTWFwo3J3aXRoQURlZmluaXRlQXJyYXmDAQIDeB1hbmRTb21lSW5kZWZpbml0ZUxlbmd0aFN0cmluZ3gfdGhhdCBoYXMsIGJlZW4gY2h1bmtlZCBvbiBjb21tYWxub3JtYWxTdHJpbmdjZm9vanNob3J0VmFsdWUZJw9uc29tZU90aGVyRmllbGR2dGhpcyBzaG91bGQgYmUgc2tpcHBlZP9saW50ZWdlclZhbHVlGQEAaWxvbmdWYWx1ZRkmkWpzaG9ydFZhbHVlGSaqa3N0cmluZ1ZhbHVlZnNpbXBsZXB0cnVlQm9vbGVhblZhbHVl9WlibG9iVmFsdWVDZm9v/w==",
+        params: {
+            byteValue: 5,
+            doubleValue: 1.889,
+            falseBooleanValue: false,
+            floatValue: 7.625,
+            integerValue: 256,
+            longValue: 9873,
+            shortValue: 9898,
+            stringValue: "simple",
+            trueBooleanValue: true,
+            blobValue: "foo"
+        },
+        appliesTo: "server"
+    },
+    {
+        id: "RpcV2CborServersShouldHandleNoAcceptHeader",
+        protocol: rpcv2Cbor,
+        documentation: "Servers should tolerate requests without an Accept header set.",
+        headers: {
+            "smithy-protocol": "rpc-v2-cbor",
             "Content-Type": "application/cbor"
         }
         requireHeaders: [
@@ -246,12 +286,12 @@ use smithy.test#httpResponseTests
         method: "POST",
         bodyMediaType: "application/cbor",
         uri: "/service/RpcV2Protocol/operation/SimpleScalarProperties",
-        body: "v2lieXRlVmFsdWUFa2RvdWJsZVZhbHVl+z/+OVgQYk3TcWZhbHNlQm9vbGVhblZhbHVl9GpmbG9hdFZhbHVl+kDz989rZXh0cmFPYmplY3S/c2luZGVmaW5pdGVMZW5ndGhNYXC/a3dpdGhBbkFycmF5nwECA///cWRlZmluaXRlTGVuZ3RoTWFwo3J3aXRoQURlZmluaXRlQXJyYXmDAQIDeB1hbmRTb21lSW5kZWZpbml0ZUxlbmd0aFN0cmluZ3gfdGhhdCBoYXMsIGJlZW4gY2h1bmtlZCBvbiBjb21tYWxub3JtYWxTdHJpbmdjZm9vanNob3J0VmFsdWUZJw9uc29tZU90aGVyRmllbGR2dGhpcyBzaG91bGQgYmUgc2tpcHBlZP9saW50ZWdlclZhbHVlGQEAaWxvbmdWYWx1ZRkmkWpzaG9ydFZhbHVlGSaqa3N0cmluZ1ZhbHVlZnNpbXBsZXB0cnVlQm9vbGVhblZhbHVl9WlibG9iVmFsdWVDZm9v/w==",
+        body: "v2lieXRlVmFsdWUFa2RvdWJsZVZhbHVl+z/+OVgQYk3TcWZhbHNlQm9vbGVhblZhbHVl9GpmbG9hdFZhbHVl+kD0AABsaW50ZWdlclZhbHVlGQEAaWxvbmdWYWx1ZRkmkWpzaG9ydFZhbHVlGSaqa3N0cmluZ1ZhbHVlZnNpbXBsZXB0cnVlQm9vbGVhblZhbHVl9WlibG9iVmFsdWVDZm9v/w==",
         params: {
             byteValue: 5,
             doubleValue: 1.889,
             falseBooleanValue: false,
-            floatValue: 7.624,
+            floatValue: 7.625,
             integerValue: 256,
             longValue: 9873,
             shortValue: 9898,
@@ -272,14 +312,14 @@ use smithy.test#httpResponseTests
             "Content-Type": "application/cbor"
         }
         bodyMediaType: "application/cbor",
-        body: "v3B0cnVlQm9vbGVhblZhbHVl9XFmYWxzZUJvb2xlYW5WYWx1ZfRpYnl0ZVZhbHVlBWtkb3VibGVWYWx1Zfs//jlYEGJN02pmbG9hdFZhbHVl+kDz989saW50ZWdlclZhbHVlGQEAanNob3J0VmFsdWUZJqprc3RyaW5nVmFsdWVmc2ltcGxlaWJsb2JWYWx1ZUNmb2//"
+        body: "v3B0cnVlQm9vbGVhblZhbHVl9XFmYWxzZUJvb2xlYW5WYWx1ZfRpYnl0ZVZhbHVlBWtkb3VibGVWYWx1Zfs//jlYEGJN02pmbG9hdFZhbHVl+kD0AABsaW50ZWdlclZhbHVlGQEAanNob3J0VmFsdWUZJqprc3RyaW5nVmFsdWVmc2ltcGxlaWJsb2JWYWx1ZUNmb2//",
         code: 200,
         params: {
             trueBooleanValue: true,
             falseBooleanValue: false,
             byteValue: 5,
             doubleValue: 1.889,
-            floatValue: 7.624,
+            floatValue: 7.625,
             integerValue: 256,
             shortValue: 9898,
             stringValue: "simple",
@@ -295,14 +335,14 @@ use smithy.test#httpResponseTests
             "Content-Type": "application/cbor"
         }
         bodyMediaType: "application/cbor",
-        body: "qXB0cnVlQm9vbGVhblZhbHVl9XFmYWxzZUJvb2xlYW5WYWx1ZfRpYnl0ZVZhbHVlBWtkb3VibGVWYWx1Zfs//jlYEGJN02pmbG9hdFZhbHVl+kDz989saW50ZWdlclZhbHVlGQEAanNob3J0VmFsdWUZJqprc3RyaW5nVmFsdWVmc2ltcGxlaWJsb2JWYWx1ZUNmb28="
+        body: "qXB0cnVlQm9vbGVhblZhbHVl9XFmYWxzZUJvb2xlYW5WYWx1ZfRpYnl0ZVZhbHVlBWtkb3VibGVWYWx1Zfs//jlYEGJN02pmbG9hdFZhbHVl+kD0AABsaW50ZWdlclZhbHVlGQEAanNob3J0VmFsdWUZJqprc3RyaW5nVmFsdWVmc2ltcGxlaWJsb2JWYWx1ZUNmb28=",
         code: 200,
         params: {
             trueBooleanValue: true,
             falseBooleanValue: false,
             byteValue: 5,
             doubleValue: 1.889,
-            floatValue: 7.624,
+            floatValue: 7.625,
             integerValue: 256,
             shortValue: 9898,
             stringValue: "simple",
@@ -421,12 +461,12 @@ use smithy.test#httpResponseTests
         }
         code: 200,
         bodyMediaType: "application/cbor",
-        body: "v2lieXRlVmFsdWUFa2RvdWJsZVZhbHVl+z/+OVgQYk3TcWZhbHNlQm9vbGVhblZhbHVl9GpmbG9hdFZhbHVl+kDz989rZXh0cmFPYmplY3S/c2luZGVmaW5pdGVMZW5ndGhNYXC/a3dpdGhBbkFycmF5nwECA///cWRlZmluaXRlTGVuZ3RoTWFwo3J3aXRoQURlZmluaXRlQXJyYXmDAQIDeB1hbmRTb21lSW5kZWZpbml0ZUxlbmd0aFN0cmluZ3gfdGhhdCBoYXMsIGJlZW4gY2h1bmtlZCBvbiBjb21tYWxub3JtYWxTdHJpbmdjZm9vanNob3J0VmFsdWUZJw9uc29tZU90aGVyRmllbGR2dGhpcyBzaG91bGQgYmUgc2tpcHBlZP9saW50ZWdlclZhbHVlGQEAaWxvbmdWYWx1ZRkmkWpzaG9ydFZhbHVlGSaqa3N0cmluZ1ZhbHVlZnNpbXBsZXB0cnVlQm9vbGVhblZhbHVl9WlibG9iVmFsdWVDZm9v/w==",
+        body: "v2lieXRlVmFsdWUFa2RvdWJsZVZhbHVl+z/+OVgQYk3TcWZhbHNlQm9vbGVhblZhbHVl9GpmbG9hdFZhbHVl+kD0AABrZXh0cmFPYmplY3S/c2luZGVmaW5pdGVMZW5ndGhNYXC/a3dpdGhBbkFycmF5nwECA///cWRlZmluaXRlTGVuZ3RoTWFwo3J3aXRoQURlZmluaXRlQXJyYXmDAQIDeB1hbmRTb21lSW5kZWZpbml0ZUxlbmd0aFN0cmluZ3gfdGhhdCBoYXMsIGJlZW4gY2h1bmtlZCBvbiBjb21tYWxub3JtYWxTdHJpbmdjZm9vanNob3J0VmFsdWUZJw9uc29tZU90aGVyRmllbGR2dGhpcyBzaG91bGQgYmUgc2tpcHBlZP9saW50ZWdlclZhbHVlGQEAaWxvbmdWYWx1ZRkmkWpzaG9ydFZhbHVlGSaqa3N0cmluZ1ZhbHVlZnNpbXBsZXB0cnVlQm9vbGVhblZhbHVl9WlibG9iVmFsdWVDZm9v/w==",
         params: {
             byteValue: 5,
             doubleValue: 1.889,
             falseBooleanValue: false,
-            floatValue: 7.624,
+            floatValue: 7.625,
             integerValue: 256,
             longValue: 9873,
             shortValue: 9898,
@@ -453,7 +493,8 @@ apply RecursiveShapes @httpRequestTests([
         bodyMediaType: "application/cbor",
         headers: {
             "smithy-protocol": "rpc-v2-cbor",
-            "Content-Type": "application/cbor"
+            "Content-Type": "application/cbor",
+            "Accept": "application/cbor"
         },
         requireHeaders: [
             "Content-Length"

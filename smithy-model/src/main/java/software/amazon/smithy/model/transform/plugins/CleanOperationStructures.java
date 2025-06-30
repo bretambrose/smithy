@@ -1,26 +1,14 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.transform.plugins;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.shapes.OperationShape;
 import software.amazon.smithy.model.shapes.Shape;
@@ -39,42 +27,63 @@ public final class CleanOperationStructures implements ModelTransformerPlugin {
     }
 
     private Collection<Shape> getModifiedOperations(Model model, Collection<Shape> removed) {
-        return model.shapes(OperationShape.class)
-                .flatMap(operation -> {
-                    OperationShape result = transformErrors(removed, operation);
-                    result = transformInput(removed, result);
-                    result = transformOutput(removed, result);
-                    return result.equals(operation) ? Stream.empty() : Stream.of(result);
-                })
-                .collect(Collectors.toList());
-    }
+        Set<ShapeId> removedIds = new HashSet<>();
+        for (Shape shape : removed) {
+            removedIds.add(shape.getId());
+        }
 
-    private OperationShape transformInput(Collection<Shape> removed, OperationShape operation) {
-        for (Shape remove : removed) {
-            if (remove.getId().equals(operation.getInputShape())) {
-                return operation.toBuilder().input(null).build();
+        List<Shape> modifiedShapes = new ArrayList<>();
+        for (OperationShape operation : model.getOperationShapes()) {
+            OperationShape.Builder builder = transformInput(removedIds, operation);
+            builder = transformOutput(removedIds, operation, builder);
+            builder = transformErrors(removedIds, operation, builder);
+            if (builder != null) {
+                modifiedShapes.add(builder.build());
             }
         }
-        return operation;
+        return modifiedShapes;
     }
 
-    private OperationShape transformOutput(Collection<Shape> removed, OperationShape operation) {
-        for (Shape remove : removed) {
-            if (remove.getId().equals(operation.getOutputShape())) {
-                return operation.toBuilder().output(null).build();
-            }
+    private OperationShape.Builder transformInput(Set<ShapeId> removed, OperationShape operation) {
+        if (removed.contains(operation.getInputShape())) {
+            OperationShape.Builder builder = operation.toBuilder();
+            builder.input(null);
+            return builder;
         }
-        return operation;
+        return null;
     }
 
-    private OperationShape transformErrors(Collection<Shape> removed, OperationShape operation) {
+    private OperationShape.Builder transformOutput(
+            Set<ShapeId> removed,
+            OperationShape operation,
+            OperationShape.Builder builder
+    ) {
+        if (removed.contains(operation.getOutputShape())) {
+            if (builder == null) {
+                builder = operation.toBuilder();
+            }
+            builder.output(null);
+            return builder;
+        }
+        return builder;
+    }
+
+    private OperationShape.Builder transformErrors(
+            Set<ShapeId> removed,
+            OperationShape operation,
+            OperationShape.Builder builder
+    ) {
         Set<ShapeId> errors = new HashSet<>(operation.getErrors());
-        removed.forEach(shape -> errors.remove(shape.getId()));
+        errors.removeAll(removed);
 
-        if (new ArrayList<>(errors).equals(operation.getErrors())) {
-            return operation;
+        if (errors.size() != operation.getErrors().size()) {
+            if (builder == null) {
+                builder = operation.toBuilder();
+            }
+            builder.errors(errors);
+            return builder;
         }
 
-        return operation.toBuilder().errors(errors).build();
+        return builder;
     }
 }

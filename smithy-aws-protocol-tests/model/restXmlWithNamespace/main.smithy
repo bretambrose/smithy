@@ -1,4 +1,6 @@
 $version: "2.0"
+$operationInputSuffix: "Request"
+$operationOutputSuffix: "Response"
 
 namespace aws.protocoltests.restxml.xmlns
 
@@ -14,7 +16,7 @@ use smithy.test#httpResponseTests
 /// in the `restXml` directory, but the service under test here has
 /// the `xmlNamespace` trait applied to it.
 ///
-/// See https://github.com/awslabs/smithy/issues/616
+/// See https://github.com/smithy-lang/smithy/issues/616
 @service(sdkId: "Rest Xml Protocol Namespace")
 @sigv4(name: "restxmlwithnamespace")
 @xmlNamespace(uri: "https://example.com")
@@ -33,8 +35,8 @@ service RestXmlWithNamespace {
 @idempotent
 @http(uri: "/SimpleScalarProperties", method: "PUT")
 operation SimpleScalarProperties {
-    input: SimpleScalarPropertiesInputOutput,
-    output: SimpleScalarPropertiesInputOutput
+    input := with [SimpleScalarPropertiesInputOutput] {}
+    output := with [SimpleScalarPropertiesInputOutput] {}
 }
 
 apply SimpleScalarProperties @httpRequestTests([
@@ -45,7 +47,7 @@ apply SimpleScalarProperties @httpRequestTests([
         method: "PUT",
         uri: "/SimpleScalarProperties",
         body: """
-              <SimpleScalarPropertiesInputOutput xmlns="https://example.com">
+              <SimpleScalarPropertiesRequest xmlns="https://example.com">
                   <stringValue>string</stringValue>
                   <trueBooleanValue>true</trueBooleanValue>
                   <falseBooleanValue>false</falseBooleanValue>
@@ -56,7 +58,7 @@ apply SimpleScalarProperties @httpRequestTests([
                   <floatValue>5.5</floatValue>
                   <DoubleDribble>6.5</DoubleDribble>
                   <Nested xmlns:xsi="https://example.com" xsi:someName="nestedAttrValue"></Nested>
-              </SimpleScalarPropertiesInputOutput>
+              </SimpleScalarPropertiesRequest>
               """,
         bodyMediaType: "application/xml",
         headers: {
@@ -88,7 +90,7 @@ apply SimpleScalarProperties @httpResponseTests([
         protocol: restXml,
         code: 200,
         body: """
-              <SimpleScalarPropertiesInputOutput xmlns="https://example.com">
+              <SimpleScalarPropertiesResponse xmlns="https://example.com">
                   <stringValue>string</stringValue>
                   <trueBooleanValue>true</trueBooleanValue>
                   <falseBooleanValue>false</falseBooleanValue>
@@ -99,7 +101,7 @@ apply SimpleScalarProperties @httpResponseTests([
                   <floatValue>5.5</floatValue>
                   <DoubleDribble>6.5</DoubleDribble>
                   <Nested xmlns:xsi="https://example.com" xsi:someName="nestedAttrValue"></Nested>
-              </SimpleScalarPropertiesInputOutput>
+              </SimpleScalarPropertiesResponse>
               """,
         bodyMediaType: "application/xml",
         headers: {
@@ -124,6 +126,7 @@ apply SimpleScalarProperties @httpResponseTests([
     }
 ])
 
+@mixin
 structure SimpleScalarPropertiesInputOutput {
     @httpHeader("X-Foo")
     foo: String,

@@ -1,23 +1,13 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.shapes;
 
 import java.util.Optional;
 import software.amazon.smithy.model.Model;
 import software.amazon.smithy.model.traits.DefaultTrait;
+import software.amazon.smithy.model.traits.RequiredTrait;
 import software.amazon.smithy.model.traits.Trait;
 import software.amazon.smithy.utils.OptionalUtils;
 import software.amazon.smithy.utils.SmithyBuilder;
@@ -92,7 +82,7 @@ public final class MemberShape extends Shape implements ToSmithyBuilder<MemberSh
      * @return Returns true if the member has the required trait.
      */
     public boolean isRequired() {
-        return findTrait("required").isPresent();
+        return hasTrait(RequiredTrait.ID);
     }
 
     /**
@@ -127,16 +117,14 @@ public final class MemberShape extends Shape implements ToSmithyBuilder<MemberSh
     public <T extends Trait> Optional<T> getMemberTrait(Model model, Class<T> trait) {
         return OptionalUtils.or(
                 getTrait(trait),
-                () -> model.getShape(getTarget()).flatMap(targetedShape -> targetedShape.getTrait(trait))
-        );
+                () -> model.getShape(getTarget()).flatMap(targetedShape -> targetedShape.getTrait(trait)));
     }
 
     @Override
     public Optional<Trait> findMemberTrait(Model model, String traitName) {
         return OptionalUtils.or(
                 findTrait(traitName),
-                () -> model.getShape(getTarget()).flatMap(targetedShape -> targetedShape.findTrait(traitName))
-        );
+                () -> model.getShape(getTarget()).flatMap(targetedShape -> targetedShape.findTrait(traitName)));
     }
 
     /**

@@ -1,22 +1,12 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.openapi.fromsmithy.protocols;
 
 import static software.amazon.smithy.openapi.OpenApiConfig.ErrorStatusConflictHandlingStrategy.ONE_OF;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -50,15 +40,14 @@ public final class AwsRestJson1Protocol extends AbstractRestProtocol<RestJson1Tr
             // Used by clients configured to work with X-Ray.
             "X-Amzn-Trace-Id",
             // Used by clients for adaptive retry behavior.
-            "Amz-Sdk-Request", "Amz-Sdk-Invocation-Id"
-    );
+            "Amz-Sdk-Request",
+            "Amz-Sdk-Invocation-Id");
 
     private static final Set<String> AWS_RESPONSE_HEADERS = SetUtils.of(
             // Used to identify a given request/response, primarily for debugging.
             "X-Amzn-Requestid",
             // Used to indicate which modeled error a given HTTP error represents.
-            "X-Amzn-Errortype"
-    );
+            "X-Amzn-Errortype");
 
     @Override
     public Class<RestJson1Trait> getProtocolType() {
@@ -71,7 +60,7 @@ public final class AwsRestJson1Protocol extends AbstractRestProtocol<RestJson1Tr
         Set<String> headers = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         headers.addAll(super.getProtocolRequestHeaders(context, operationShape));
         headers.addAll(AWS_REQUEST_HEADERS);
-        if (operationShape.hasTrait(ClientDiscoveredEndpointTrait.class)) {
+        if (operationShape.hasTrait(ClientDiscoveredEndpointTrait.ID)) {
             headers.add("X-Amz-Api-Version");
         }
         return headers;
@@ -142,14 +131,15 @@ public final class AwsRestJson1Protocol extends AbstractRestProtocol<RestJson1Tr
         if (context.getConfig().getOnErrorStatusConflict() != null
                 && context.getConfig().getOnErrorStatusConflict().equals(ONE_OF)
                 && targetsSyntheticError(cleanedShape, context)) {
-            UnionShape.Builder asUnion = UnionShape.builder().id(cleanedShape.getId());
-            UnionShape targetUnion = context.getModel().expectShape(
-                    cleanedShape.getAllMembers().values().stream().findFirst().get().getTarget(), UnionShape.class);
+            UnionShape targetUnion = context.getModel()
+                    .expectShape(
+                            cleanedShape.getAllMembers().values().stream().findFirst().get().getTarget(),
+                            UnionShape.class);
+            List<Schema> oneOfMembers = new ArrayList<>();
             for (MemberShape member : targetUnion.getAllMembers().values()) {
-                String name = member.getMemberName();
-                asUnion.addMember(member.toBuilder().id(cleanedShape.getId().withMember(name)).build());
+                oneOfMembers.add(context.createRef(member));
             }
-            return context.getJsonSchemaConverter().convertShape(asUnion.build()).getRootSchema();
+            return Schema.builder().type(null).oneOf(oneOfMembers).build();
         }
         return context.getJsonSchemaConverter().convertShape(cleanedShape).getRootSchema();
     }
@@ -166,7 +156,9 @@ public final class AwsRestJson1Protocol extends AbstractRestProtocol<RestJson1Tr
     }
 
     private boolean hasSingleUnionMember(StructureShape shape, Model model) {
-        long unionCount = shape.getAllMembers().values().stream()
+        long unionCount = shape.getAllMembers()
+                .values()
+                .stream()
                 .map(member -> model.expectShape(member.getTarget()))
                 .filter(Shape::isUnionShape)
                 .count();

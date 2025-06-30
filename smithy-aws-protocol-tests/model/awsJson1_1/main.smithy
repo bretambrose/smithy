@@ -26,6 +26,7 @@ service JsonProtocol {
         OperationWithOptionalInputOutput,
         PutAndGetInlineDocuments,
         JsonEnums,
+        JsonIntEnums
         NullOperation,
         SparseNullsOperation,
         GreetingWithErrors,
@@ -44,6 +45,9 @@ service JsonProtocol {
 
         // requestCompression trait tests
         PutWithContentEncoding
+
+        // Content-Type header tests
+        ContentTypeParameters,
     ],
 }
 

@@ -80,7 +80,7 @@ without mixins:
         c: String
     }
 
-Mixins be any shape type, but they MUST NOT be applied to a shape of a
+Mixins can be any shape type, but they MUST NOT be applied to a shape of a
 different type. For example, a string mixin can be applied to a string
 shape, but not to a blob shape.
 
@@ -298,6 +298,9 @@ Alternatively, the member can be redefined if it targets the same shape:
         mixinMember: String
     }
 
+.. warning::
+
+    Removing mixed in members through transforms will result in an inconsistent model.
 
 Mixins are an implementation detail of the model
 ================================================
@@ -492,7 +495,13 @@ example, in the following model:
 
 .. code-block:: smithy
 
-    operation OperationA {}
+    operation OperationA {
+        input: OperationAInput
+        output: OperationAOutput
+    }
+
+    structure OperationAInput {}
+    structure OperationAOutput {}
 
     @mixin
     service A {
@@ -500,14 +509,18 @@ example, in the following model:
         operations: [OperationA]
     }
 
-    operation OperationB {}
+    operation OperationB {
+        input: OperationBInput
+    }
+
+    structure OperationBInput {}
 
     @mixin
     service B with [A] {
         version: "B"
         rename: {
-            "smithy.example#OperationA": "OperA"
-            "smithy.example#OperationB": "OperB"
+            "smithy.example#OperationAInput": "OperationARequest"
+            "smithy.example#OperationAOutput": "OperationAResult"
         }
         operations: [OperationB]
     }
@@ -517,8 +530,8 @@ example, in the following model:
     service C with [B] {
         version: "C"
         rename: {
-            "smithy.example#OperationA": "OpA"
-            "smithy.example#OperationC": "OpC"
+            "smithy.example#OperationAOutput": "OperationAResponse"
+            "smithy.example#OperationBInput": "OperationBRequest"
         }
         operations: [OperationC]
     }
@@ -527,18 +540,28 @@ The flattened equivalent of ``C`` with no mixins is:
 
 .. code-block:: smithy
 
-    operation OperationA {}
+    operation OperationA {
+        input: OperationAInput
+        output: OperationAOutput
+    }
 
-    operation OperationB {}
+    structure OperationAInput {}
+    structure OperationAOutput {}
+
+    operation OperationB {
+        input: OperationBInput
+    }
+
+    structure OperationBInput {}
 
     operation OperationC {}
 
     service C {
         version: "C"
         rename: {
-            "smithy.example#OperationA": "OpA"
-            "smithy.example#OperationB": "OperB"
-            "smithy.example#OperationC": "OpC"
+            "smithy.example#OperationAInput": "OperationARequest"
+            "smithy.example#OperationAOutput": "OperationAResponse"
+            "smithy.example#OperationBInput": "OperationBRequest"
         }
         operations: [OperationA, OperationB, OperationC]
     }
@@ -588,7 +611,7 @@ Operation shapes with the :ref:`mixin-trait` MAY define errors.
         output := {
             name: String
         }
-        error: [NotFoundError]
+        errors: [NotFoundError]
     }
 
     @error("client")

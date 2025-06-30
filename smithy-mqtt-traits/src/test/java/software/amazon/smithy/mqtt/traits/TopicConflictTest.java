@@ -1,18 +1,7 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.mqtt.traits;
 
 import java.util.Arrays;
@@ -23,10 +12,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public class TopicConflictTest {
     @ParameterizedTest
-    @MethodSource("data")
-    public void patternConflicts(String topicA, String topicB, boolean isConflicting) {
-        Topic a = Topic.parse(Topic.TopicType.FILTER, topicA);
-        Topic b = Topic.parse(Topic.TopicType.FILTER, topicB);
+    @MethodSource("topicCases")
+    public void topicPatternConflicts(String topicA, String topicB, boolean isConflicting) {
+        Topic a = Topic.parse(Topic.TopicType.TOPIC, topicA);
+        Topic b = Topic.parse(Topic.TopicType.TOPIC, topicB);
 
         if (a.conflictsWith(b) != isConflicting) {
             if (isConflicting) {
@@ -37,8 +26,8 @@ public class TopicConflictTest {
         }
     }
 
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
+    public static Collection<Object[]> topicCases() {
+        return Arrays.asList(new Object[][]{
                 // No conflict because a is more specific.
                 {"a", "{x}", false},
                 // No conflict because "a" is more specific than "{y}".
@@ -65,12 +54,66 @@ public class TopicConflictTest {
                 {"a/b/c/d", "a/{b}/c/{d}", false},
                 // No conflict.
                 {"$aws/things/{thingName}/jobs/get", "$aws/things/{thingName}/jobs/start-next", false}
-/*
+        });
+    }
+
+    @ParameterizedTest
+    @MethodSource("topicFilterCases")
+    public void topicFilterPatternConflicts(String topicA, String topicB, boolean isConflicting) {
+        Topic a = Topic.parse(Topic.TopicType.FILTER, topicA);
+        Topic b = Topic.parse(Topic.TopicType.FILTER, topicB);
+
+        if (a.conflictsWith(b) != isConflicting) {
+            if (isConflicting) {
+                Assertions.fail("Expected conflict between `" + a + "` and `" + b + "`");
+            } else {
+                Assertions.fail("Unexpected conflict between `" + a + "` and `" + b + "`");
+            }
+        }
+    }
+
+    public static Collection<Object[]> topicFilterCases() {
+        return Arrays.asList(new Object[][] {
+                // No conflict because a is more specific.
+                {"a", "{x}", false},
+                // No conflict because "a" is more specific than "{y}".
+                {"a/{x}", "{y}/a", false},
+                // No conflict because "a" is more specific than "{x}".
+                {"{x}/a", "a/{y}", false},
+                // Conflicts because the topics are equivalent and the same length.
+                {"a/{x}", "a/{y}", true},
+                // Does not conflict because "{x}" and "{y}" are under different level prefixes.
+                {"a/{x}", "b/{y}", false},
+                // Conflicts because they have the same levels and the same length.
+                {"a/{x}/b", "a/{y}/b", true},
+                // Does not conflict because one is longer than the other.
+                {"a/{x}/b", "a/{y}/b/{z}", false},
+                // Does not conflict because one is longer than the other.
+                {"a/{x}/b", "a/{y}/b/{z}/c", false},
+                // Do not conflict because "b" is more specific than "{b}"
+                {"a/b/c", "a/{b}/c", false},
+                // Conflicts because they are all labels at the same level.
+                {"{a}/{b}/{c}", "{x}/{y}/{z}", true},
+                // No conflicts because one is longer than the other.
+                {"{a}/{b}/{c}", "{x}/{y}/{z}/{a}", false},
+                // No conflict
+                {"a/b/c/d", "a/{b}/c/{d}", false},
+                // No conflict.
+                {"$aws/things/{thingName}/jobs/get", "$aws/things/{thingName}/jobs/start-next", false},
+                // Conflicts because multi-level wild card matches rest of path
                 {"a/#", "a/b/c/d", true},
+                // Conflicts becase single-level wild card matches segment
                 {"a/+/c", "a/b/c", true},
+                // Conflicts becase single-level wild card matches label segment
                 {"a/{b}/c", "a/+/c", true},
+                // No conflict because single-level wildcard doesn't match multi-segment "b/c"
                 {"a/+/c", "a/b/c/d", false},
-                {"#", "/", true}*/
-                });
+                // Conflicts because '#' matches everything
+                {"#", "/", true},
+                // Conflicts because '#' matches everything
+                {"+/a", "#", true},
+                // Conflicts because 'a/a' matches both
+                {"+/a", "a/+", true}
+        });
     }
 }

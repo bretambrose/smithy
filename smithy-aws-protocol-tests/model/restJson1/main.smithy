@@ -54,6 +54,7 @@ service RestJson {
         // @httpPrefixHeaders tests
         HttpPrefixHeaders,
         HttpPrefixHeadersInResponse,
+        HttpEmptyPrefixHeaders,
 
         // @httpPayload tests
         HttpPayloadTraits,
@@ -65,6 +66,8 @@ service RestJson {
 
         // @httpResponseCode tests
         HttpResponseCode,
+        ResponseCodeRequired
+        ResponseCodeHttpFallback
 
         // @streaming tests
         StreamingTraits,
@@ -133,6 +136,7 @@ service RestJson {
         MalformedTimestampBodyDateTime,
         MalformedTimestampBodyHttpDate,
         MalformedContentTypeWithoutBody,
+        MalformedContentTypeWithoutBodyEmptyInput
         MalformedContentTypeWithBody,
         MalformedContentTypeWithPayload,
         MalformedContentTypeWithGenericString,
@@ -144,13 +148,23 @@ service RestJson {
         TestBodyStructure,
         TestPayloadStructure,
         TestPayloadBlob,
-        TestNoPayload,
+        TestGetNoPayload
+        TestPostNoPayload,
+        TestGetNoInputNoPayload,
+        TestPostNoInputNoPayload,
 
         // client-only timestamp parsing tests
         DatetimeOffsets,
         FractionalSeconds,
 
         // requestCompression trait tests
-        PutWithContentEncoding
+        PutWithContentEncoding,
+
+        // Content-Type header tests
+        ContentTypeParameters,
+
+        // defaults
+        OperationWithDefaults
+        OperationWithNestedStructure
     ]
 }

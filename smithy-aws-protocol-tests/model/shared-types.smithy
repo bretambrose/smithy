@@ -18,6 +18,34 @@ metadata suppressions = [
     }
 ]
 
+metadata validators = [
+    {
+        name: "EmitEachSelector"
+        id: "UnboundTestOperation"
+        severity: "WARNING"
+        message: "This operation in the AWS protocol tests is not bound to a service."
+        namespaces: [
+            // Overall protocol test suites.
+            "aws.protocoltests.json10"
+            "aws.protocoltests.json"
+            "aws.protocoltests.query"
+            "aws.protocoltests.ec2"
+            "aws.protocoltests.restjson.validation"
+            "aws.protocoltests.restjson"
+            "aws.protocoltests.restxml"
+            "aws.protocoltests.restxml.xmlns"
+            // Service specific test suites.
+            "com.amazonaws.apigateway"
+            "com.amazonaws.glacier"
+            "com.amazonaws.machinelearning"
+            "com.amazonaws.s3"
+        ]
+        configuration: {
+            "selector": "operation :not(< service)"
+        }
+    }
+]
+
 namespace aws.protocoltests.shared
 
 list StringList {
@@ -57,6 +85,11 @@ list NestedStringList {
 
 list ShortList {
     member: Short,
+}
+
+@sparse
+list SparseShortList {
+    member: Short
 }
 
 list IntegerList {

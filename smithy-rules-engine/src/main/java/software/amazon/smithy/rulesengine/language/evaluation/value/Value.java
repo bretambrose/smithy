@@ -2,7 +2,6 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.rulesengine.language.evaluation.value;
 
 import static java.lang.String.format;
@@ -107,7 +106,7 @@ public abstract class Value implements FromSourceLocation, ToNode {
     }
 
     /**
-     * Creates an {@link BooleanValue} from a boolean.
+     * Creates a {@link BooleanValue} from a boolean.
      *
      * @param value the value for the boolean.
      * @return returns the created BooleanValue.
@@ -146,7 +145,7 @@ public abstract class Value implements FromSourceLocation, ToNode {
     }
 
     /**
-     * Creates an {@link RecordValue} from a map of identifiers to values.
+     * Creates a {@link RecordValue} from a map of identifiers to values.
      *
      * @param value the map to create a record from.
      * @return returns the created RecordValue.
@@ -156,7 +155,7 @@ public abstract class Value implements FromSourceLocation, ToNode {
     }
 
     /**
-     * Creates an {@link StringValue} from a string.
+     * Creates a {@link StringValue} from a string.
      *
      * @param value the value for the string.
      * @return returns the created StringValue.
@@ -176,7 +175,7 @@ public abstract class Value implements FromSourceLocation, ToNode {
     }
 
     /**
-     * Returns the current value as an {@link ArrayValue}, throwing
+     * Returns the current value as a {@link BooleanValue}, throwing
      * {@link RuntimeException} when the value is the wrong type.
      *
      * @return returns a boolean value.
@@ -186,7 +185,7 @@ public abstract class Value implements FromSourceLocation, ToNode {
     }
 
     /**
-     * Returns the current value as an {@link ArrayValue}, throwing
+     * Returns the current value as an {@link EndpointValue}, throwing
      * {@link RuntimeException} when the value is the wrong type.
      *
      * @return returns an endpoint value
@@ -196,7 +195,7 @@ public abstract class Value implements FromSourceLocation, ToNode {
     }
 
     /**
-     * Returns the current value as an {@link ArrayValue}, throwing
+     * Returns the current value as an {@link IntegerValue}, throwing
      * {@link RuntimeException} when the value is the wrong type.
      *
      * @return returns an integer value.
@@ -206,7 +205,7 @@ public abstract class Value implements FromSourceLocation, ToNode {
     }
 
     /**
-     * Returns the current value as an {@link ArrayValue}, throwing
+     * Returns the current value as a {@link RecordValue}, throwing
      * {@link RuntimeException} when the value is the wrong type.
      *
      * @return returns a record value.
@@ -216,7 +215,7 @@ public abstract class Value implements FromSourceLocation, ToNode {
     }
 
     /**
-     * Returns the current value as an {@link ArrayValue}, throwing
+     * Returns the current value as a {@link StringValue}, throwing
      * {@link RuntimeException} when the value is the wrong type.
      *
      * @return returns a string value.
@@ -227,6 +226,8 @@ public abstract class Value implements FromSourceLocation, ToNode {
 
     private RuntimeException throwTypeMismatch(String expectedType) {
         return new RuntimeException(format("Expected `%s` but was `%s` with value: `%s`",
-                expectedType, getType(), this));
+                expectedType,
+                getType(),
+                this));
     }
 }

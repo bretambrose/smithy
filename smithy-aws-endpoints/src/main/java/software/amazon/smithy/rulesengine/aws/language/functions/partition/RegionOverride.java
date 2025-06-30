@@ -2,7 +2,6 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.rulesengine.aws.language.functions.partition;
 
 import software.amazon.smithy.model.FromSourceLocation;
@@ -10,7 +9,6 @@ import software.amazon.smithy.model.SourceLocation;
 import software.amazon.smithy.model.node.Node;
 import software.amazon.smithy.model.node.ToNode;
 import software.amazon.smithy.rulesengine.language.RulesComponentBuilder;
-import software.amazon.smithy.utils.SmithyBuilder;
 import software.amazon.smithy.utils.SmithyUnstableApi;
 import software.amazon.smithy.utils.ToSmithyBuilder;
 
@@ -54,7 +52,7 @@ public final class RegionOverride implements ToSmithyBuilder<RegionOverride>, Fr
     }
 
     @Override
-    public SmithyBuilder<RegionOverride> toBuilder() {
+    public Builder toBuilder() {
         return new Builder(getSourceLocation());
     }
 

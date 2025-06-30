@@ -1,18 +1,7 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.aws.cloudformation.traits;
 
 import java.util.ArrayList;
@@ -25,7 +14,6 @@ import software.amazon.smithy.model.traits.AbstractTrait;
 import software.amazon.smithy.model.traits.AbstractTraitBuilder;
 import software.amazon.smithy.model.traits.Trait;
 import software.amazon.smithy.utils.ListUtils;
-import software.amazon.smithy.utils.SmithyBuilder;
 import software.amazon.smithy.utils.ToSmithyBuilder;
 
 /**
@@ -37,11 +25,13 @@ public final class CfnResourceTrait extends AbstractTrait
 
     private final String name;
     private final List<ShapeId> additionalSchemas;
+    private final String primaryIdentifier;
 
     private CfnResourceTrait(Builder builder) {
         super(ID, builder.getSourceLocation());
         name = builder.name;
         additionalSchemas = ListUtils.copyOf(builder.additionalSchemas);
+        primaryIdentifier = builder.primaryIdentifier;
     }
 
     /**
@@ -62,6 +52,15 @@ public final class CfnResourceTrait extends AbstractTrait
         return additionalSchemas;
     }
 
+    /**
+     * Gets the alternative resource property to use as the primary identifier for the CloudFormation resource.
+     *
+     * @return Returns the optional alternative primary identifier.
+     */
+    public Optional<String> getPrimaryIdentifier() {
+        return Optional.ofNullable(primaryIdentifier);
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -75,7 +74,7 @@ public final class CfnResourceTrait extends AbstractTrait
     }
 
     @Override
-    public SmithyBuilder<CfnResourceTrait> toBuilder() {
+    public Builder toBuilder() {
         return builder().sourceLocation(getSourceLocation()).name(name).additionalSchemas(additionalSchemas);
     }
 
@@ -95,6 +94,7 @@ public final class CfnResourceTrait extends AbstractTrait
     public static final class Builder extends AbstractTraitBuilder<CfnResourceTrait, Builder> {
         private String name;
         private final List<ShapeId> additionalSchemas = new ArrayList<>();
+        private String primaryIdentifier;
 
         private Builder() {}
 
@@ -116,6 +116,11 @@ public final class CfnResourceTrait extends AbstractTrait
         public Builder additionalSchemas(List<ShapeId> additionalSchemas) {
             this.additionalSchemas.clear();
             this.additionalSchemas.addAll(additionalSchemas);
+            return this;
+        }
+
+        public Builder primaryIdentifier(String primaryIdentifier) {
+            this.primaryIdentifier = primaryIdentifier;
             return this;
         }
     }

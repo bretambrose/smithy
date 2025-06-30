@@ -1,18 +1,7 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.transform;
 
 import software.amazon.smithy.model.Model;
@@ -44,17 +33,17 @@ final class AddClientOptional {
             MemberShape member = (MemberShape) shape;
 
             // Don't do anything if it's already marked with clientOptional.
-            if (member.hasTrait(ClientOptionalTrait.class)) {
+            if (member.hasTrait(ClientOptionalTrait.ID)) {
                 return member;
             }
 
             Shape container = model.expectShape(member.getContainer());
             Shape target = model.expectShape(member.getTarget());
 
-            boolean hasInputTrait = container.hasTrait(InputTrait.class);
+            boolean hasInputTrait = container.hasTrait(InputTrait.ID);
             boolean targetsShapeWithNoZeroValue = target.isStructureShape() || target.isUnionShape();
             boolean isEffectivelyClientOptional = hasInputTrait
-                    || !(member.hasTrait(RequiredTrait.class) || member.hasTrait(DefaultTrait.class))
+                    || !(member.hasTrait(RequiredTrait.ID) || member.hasTrait(DefaultTrait.ID))
                     || (targetsShapeWithNoZeroValue && applyWhenNoDefaultValue);
 
             if (isEffectivelyClientOptional) {

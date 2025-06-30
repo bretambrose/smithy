@@ -7,6 +7,11 @@ Please read through this document before submitting any issues or pull requests 
 information to effectively respond to your bug report or contribution.
 
 
+## Building the Project
+
+Building this project **requires having a JDK17+ installation**. However, for the time being, most modules will still 
+produce artifacts targeting JDK8, unless explicitly noted otherwise. 
+
 ## Reporting Bugs/Feature Requests
 
 We welcome you to use the GitHub issue tracker to report bugs or suggest features.
@@ -37,10 +42,11 @@ To send us a pull request, please:
 3. Follow the same coding style as the rest of the project.
 4. Add new test cases that exercise the change and covers all non-trivial branches.
 5. Ensure that running `./gradlew clean build` completes successfully.
-6. Commit to your fork using clear commit messages by following the guidance at
+6. Write a changelog entry using [`./changes/new-change`](.changes/README.md).
+7. Commit to your fork using clear commit messages by following the guidance at
    [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/).
-7. Send us a pull request, answering any default questions in the pull request interface.
-8. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
+8. Send us a pull request, answering any default questions in the pull request interface.
+9. Pay attention to any automated CI failures reported in the pull request, and stay involved in the conversation.
 
 GitHub provides additional documentation on [forking a repository](https://help.github.com/articles/fork-a-repo/)
 and [creating a pull request](https://help.github.com/articles/creating-a-pull-request/).

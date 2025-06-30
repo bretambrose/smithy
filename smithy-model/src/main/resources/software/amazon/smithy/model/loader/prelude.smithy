@@ -81,6 +81,7 @@ structure trait {
     selector: String
 
     /// Whether or not only a single member in a shape can have this trait.
+    /// This only has an effect on members of structure shapes.
     structurallyExclusive: StructurallyExclusive
 
     /// The traits that this trait conflicts with.
@@ -668,9 +669,8 @@ list tags {
 /// Defines a proper name for a service or resource shape.
 ///
 /// This title can be used in automatically generated documentation
-/// and other contexts to provide a user friendly name for services
-/// and resources.
-@trait(selector: ":is(service, resource)")
+/// and other contexts to provide a user friendly for shapes.
+@trait(selector: ":not(member)")
 string title
 
 /// Constrains the acceptable values of a string to a fixed set
@@ -1123,7 +1123,7 @@ enum timestampFormat {
     EPOCH_SECONDS = "epoch-seconds"
 
     /// An HTTP date as defined by the IMF-fixdate production in
-    /// RFC 7231#section-7.1.1.1 (for example, Tue, 29 Apr 2014 18:30:38 GMT).
+    /// RFC 9110#section-5.6.7 (for example, Tue, 29 Apr 2014 18:30:38 GMT).
     HTTP_DATE = "http-date"
 }
 

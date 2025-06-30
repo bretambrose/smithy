@@ -209,13 +209,13 @@ in the given partition. A PartitionSpecialCase object contains the following pro
       - Description
     * - endpoint
       - ``string``
-      - **Required**. The special-cased :ref:`endpoint pattern <aws.endpoints#endpoint-pattern>`
+      - **Required**. The special-cased :ref:`endpoint pattern <aws.endpoints#endpoint-pattern>`.
     * - dualStack
       - ``boolean``
-      - When ``true`` the special case will apply to dualstack endpoint variants.
+      - When ``true``, the special case will apply to dualstack endpoint variants.
     * - fips
       - ``boolean``
-      - When ``true`` the special case will apply to fips endpoint variants.
+      - When ``true``, the special case will apply to fips endpoint variants.
 
 
 ``RegionSpecialCase`` object
@@ -235,10 +235,10 @@ A ``RegionSpecialCase`` object contains the following properties:
       - **Required**. The special-cased :ref:`endpoint pattern <aws.endpoints#endpoint-pattern>`.
     * - dualStack
       - ``boolean``
-      - When ``true`` the special case will apply to dualstack endpoint variants.
+      - When ``true``, the special case will apply to dualstack endpoint variants.
     * - fips
       - ``boolean``
-      - When ``true`` the special case will apply to fips endpoint variants.
+      - When ``true``, the special case will apply to fips endpoint variants.
     * - signingRegion
       - ``string``
       - Overrides the signingRegion used for this region.
@@ -269,9 +269,7 @@ Trait value
       - Description
     * - endpointPatternType
       - ``string``
-      - **Required** The pattern type to use for the partition endpoint.  This value can be set to ``service_dnsSuffix`` to
-        use the ``https://{service}.{dnsSuffix}`` pattern or ``service_region_dnsSuffix`` to use
-        ``https://{service}.{region}.{dnsSuffix}``.
+      - **Required** The pattern type to use for the partition endpoint.  This value should be set to ``aws_recommended`` in almost all cases.
     * - partitionEndpointSpecialCases
       - ``map`` of partition to `PartitionEndpointSpecialCase object`_
       - A map of partition to partition endpoint special cases - partitions that do not follow the
@@ -282,13 +280,9 @@ Conflicts with
     :ref:`aws.endpoints#standardRegionalEndpoints-trait`
 
 Partitional services (also known as "global" services) resolve a single endpoint per partition.
-That single endpoint is located in the partition's ``defaultGlobalRegion``. Partitional
-services should follow one of two standard patterns:
+That single endpoint is located in the partition's ``defaultGlobalRegion``.
 
-- ``service_dnsSuffix``: ``https://{service}.{dnsSuffix}``
-- ``service_region_dnsSuffix``: ``https://{service}.{region}.{dnsSuffix}``
-
-The following example defines a partitional service that uses ``{service}.{dnsSuffix}``:
+The following example defines a partitional service that uses AWS recommended patterns for each partition:
 
 .. code-block:: smithy
 
@@ -298,19 +292,19 @@ The following example defines a partitional service that uses ``{service}.{dnsSu
 
     use aws.endpoints#standardPartitionalEndpoints
 
-    @standardPartitionalEndpoints(endpointPatternType: "service_dnsSuffix")
+    @standardPartitionalEndpoints(endpointPatternType: "aws_recommended")
     service MyService {
         version: "2020-04-02"
     }
 
-Services should follow the standard patterns; however, occasionally there are special cases.
+Services should follow the standard patterns set by the DNS naming guidelines; however, occasionally there are special cases.
 The following example defines a partitional service that uses a special case pattern in
 the ``aws`` partition and uses a non-standard global region in the ``aws-cn`` partition:
 
 .. code-block:: smithy
 
     @standardPartitionalEndpoints(
-        endpointPatternType: "service_dnsSuffix",
+        endpointPatternType: "aws_recommended",
         partitionEndpointSpecialCases: {
             aws: [{endpoint: "https://myservice.global.amazonaws.com"}],
             aws-cn: [{region: "cn-north-1"}]
@@ -340,10 +334,10 @@ A ``PartitionEndpointSpecialCase`` object contains the following properties:
       - Override the ``defaultGlobalRegion`` used in this partition.
     * - dualStack
       - ``boolean``
-      - When ``true`` the special case will apply to dualstack endpoint variants.
+      - When ``true``, the special case will apply to dualstack endpoint variants.
     * - fips
       - ``boolean``
-      - When ``true`` the special case will apply to fips endpoint variants.
+      - When ``true``, the special case will apply to fips endpoint variants.
 
 .. smithy-trait:: aws.endpoints#dualStackOnlyEndpoints
 .. _aws.endpoints#dualStackOnlyEndpoints-trait:

@@ -1,3 +1,7 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package software.amazon.smithy.rulesengine.aws.traits;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,11 +27,17 @@ class StandardRegionalEndpointsTraitTest {
 
         assertEquals(trait.getPartitionSpecialCases().size(), 0);
         assertEquals(trait.getRegionSpecialCases().size(), 0);
+        assertEquals(trait,
+                new StandardRegionalEndpointsTrait.Provider().createTrait(StandardRegionalEndpointsTrait.ID,
+                        trait.toBuilder().build().toNode()));
 
         trait = getTraitFromService(model, "ns.foo#Service2");
 
         assertEquals(trait.getPartitionSpecialCases().size(), 0);
         assertEquals(trait.getRegionSpecialCases().size(), 0);
+        assertEquals(trait,
+                new StandardRegionalEndpointsTrait.Provider().createTrait(StandardRegionalEndpointsTrait.ID,
+                        trait.toBuilder().build().toNode()));
 
         trait = getTraitFromService(model, "ns.foo#Service3");
 
@@ -46,15 +56,23 @@ class StandardRegionalEndpointsTraitTest {
         assertNull(partitionSpecialCase2.getFips());
 
         List<RegionSpecialCase> regionSpecialCases = trait.getRegionSpecialCases().get("us-east-1");
-        assertEquals(regionSpecialCases.size(), 0);
+        assertEquals(regionSpecialCases.size(), 1);
+        RegionSpecialCase regionSpecialCase = regionSpecialCases.get(0);
+        assertEquals(regionSpecialCase.getEndpoint(), "https://myservice.amazonaws.com");
+        assertEquals(regionSpecialCase.getDualStack(), true);
+        assertEquals(trait,
+                new StandardRegionalEndpointsTrait.Provider().createTrait(StandardRegionalEndpointsTrait.ID,
+                        trait.toBuilder().build().toNode()));
 
         Node.assertEquals(trait.toNode(), trait.toBuilder().build().toNode());
     }
 
     private StandardRegionalEndpointsTrait getTraitFromService(Model model, String service) {
         return model
-            .expectShape(ShapeId.from(service))
-            .asServiceShape().get()
-            .getTrait(StandardRegionalEndpointsTrait.class).get();
+                .expectShape(ShapeId.from(service))
+                .asServiceShape()
+                .get()
+                .getTrait(StandardRegionalEndpointsTrait.class)
+                .get();
     }
 }

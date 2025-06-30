@@ -1,18 +1,7 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.shapes;
 
 import java.nio.file.Path;
@@ -34,6 +23,7 @@ import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import software.amazon.smithy.model.Model;
+import software.amazon.smithy.model.knowledge.OperationIndex;
 import software.amazon.smithy.model.loader.Prelude;
 import software.amazon.smithy.model.node.ArrayNode;
 import software.amazon.smithy.model.node.BooleanNode;
@@ -51,10 +41,10 @@ import software.amazon.smithy.model.traits.OutputTrait;
 import software.amazon.smithy.model.traits.Trait;
 import software.amazon.smithy.model.traits.UnitTypeTrait;
 import software.amazon.smithy.utils.AbstractCodeWriter;
-import software.amazon.smithy.utils.CodeWriter;
 import software.amazon.smithy.utils.FunctionalUtils;
 import software.amazon.smithy.utils.ListUtils;
 import software.amazon.smithy.utils.Pair;
+import software.amazon.smithy.utils.SimpleCodeWriter;
 import software.amazon.smithy.utils.SmithyBuilder;
 import software.amazon.smithy.utils.StringUtils;
 
@@ -74,6 +64,7 @@ public final class SmithyIdlModelSerializer {
     private final String inlineInputSuffix;
     private final String inlineOutputSuffix;
     private final boolean inferInlineIoSuffixes;
+    private final boolean shouldCoerceInlineIo;
 
     /**
      * Trait serialization features.
@@ -106,7 +97,7 @@ public final class SmithyIdlModelSerializer {
         // If prelude serializing has been enabled, only use the given shape filter.
         if (builder.serializePrelude) {
             shapeFilter = builder.shapeFilter;
-        // Default to using the given shape filter and filtering prelude shapes.
+            // Default to using the given shape filter and filtering prelude shapes.
         } else {
             shapeFilter = builder.shapeFilter.and(FunctionalUtils.not(Prelude::isPreludeShape));
         }
@@ -114,15 +105,21 @@ public final class SmithyIdlModelSerializer {
         traitFilter = builder.traitFilter.and(FunctionalUtils.not(Trait::isSynthetic));
         basePath = builder.basePath;
         if (basePath != null) {
-            Function<Shape, Path> shapePlacer = builder.shapePlacer;
-            this.shapePlacer = shape -> this.basePath.resolve(shapePlacer.apply(shape));
+            Function<Shape, Path> placer = builder.shapePlacer;
+            shapePlacer = shape -> basePath.resolve(placer.apply(shape));
         } else {
-            this.shapePlacer = builder.shapePlacer;
+            shapePlacer = builder.shapePlacer;
         }
-        this.componentOrder = builder.componentOrder;
-        this.inlineInputSuffix = builder.inlineInputSuffix;
-        this.inlineOutputSuffix = builder.inlineOutputSuffix;
-        this.inferInlineIoSuffixes = builder.inferInlineIoSuffixes;
+        componentOrder = builder.componentOrder;
+        inlineInputSuffix = builder.inlineInputSuffix;
+        inlineOutputSuffix = builder.inlineOutputSuffix;
+        shouldCoerceInlineIo = builder.shouldCoerceInlineIo;
+        // Force inferring suffixes on if coercion is on.
+        if (shouldCoerceInlineIo) {
+            inferInlineIoSuffixes = true;
+        } else {
+            inferInlineIoSuffixes = builder.inferInlineIoSuffixes;
+        }
     }
 
     /**
@@ -144,15 +141,38 @@ public final class SmithyIdlModelSerializer {
         Map<Path, String> result = model.shapes()
                 .filter(FunctionalUtils.not(Shape::isMemberShape))
                 .filter(shapeFilter)
-                .collect(Collectors.groupingBy(shapePlacer)).entrySet().stream()
+                .collect(Collectors.groupingBy(shapePlacer))
+                .entrySet()
+                .stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, entry -> serialize(model, entry.getValue())));
+        // If there is no metadata, do not create metadata file
+        if (model.getMetadata().isEmpty()) {
+            return result;
+        }
+
+        // Add metadata file to the list of output files
+        Path metadataPath = Paths.get("metadata.smithy");
+        if (basePath != null) {
+            metadataPath = basePath.resolve(metadataPath);
+        }
         if (result.isEmpty()) {
-            Path path = Paths.get("metadata.smithy");
-            if (basePath != null) {
-                path = basePath.resolve(path);
-            }
-            return Collections.singletonMap(path, serializeHeader(
-                    model, null, Collections.emptySet(), inlineInputSuffix, inlineOutputSuffix));
+            return Collections.singletonMap(metadataPath,
+                    serializeHeader(
+                            model,
+                            null,
+                            Collections.emptySet(),
+                            inlineInputSuffix,
+                            inlineOutputSuffix,
+                            true));
+        } else {
+            result.put(metadataPath,
+                    serializeHeader(
+                            model,
+                            null,
+                            Collections.emptySet(),
+                            inlineInputSuffix,
+                            inlineOutputSuffix,
+                            true));
         }
         return result;
     }
@@ -172,9 +192,17 @@ public final class SmithyIdlModelSerializer {
 
         Pair<String, String> inlineSuffixes = determineInlineSuffixes(fullModel, shapes);
         Set<ShapeId> inlineableShapes = getInlineableShapes(
-                fullModel, shapes, inlineSuffixes.getLeft(), inlineSuffixes.getRight());
+                fullModel,
+                shapes,
+                inlineSuffixes.getLeft(),
+                inlineSuffixes.getRight());
         ShapeSerializer shapeSerializer = new ShapeSerializer(
-                codeWriter, nodeSerializer, traitFilter, fullModel, inlineableShapes, componentOrder);
+                codeWriter,
+                nodeSerializer,
+                traitFilter,
+                fullModel,
+                inlineableShapes,
+                componentOrder);
         Comparator<Shape> comparator = componentOrder.shapeComparator();
         shapes.stream()
                 .filter(FunctionalUtils.not(Shape::isMemberShape))
@@ -183,8 +211,13 @@ public final class SmithyIdlModelSerializer {
                 .forEach(shape -> shape.accept(shapeSerializer));
 
         String header = serializeHeader(
-                fullModel, namespace, shapes, inlineSuffixes.getLeft(), inlineSuffixes.getRight());
-        return header + codeWriter.toString();
+                fullModel,
+                namespace,
+                shapes,
+                inlineSuffixes.getLeft(),
+                inlineSuffixes.getRight(),
+                false);
+        return header + codeWriter;
     }
 
     private Set<ShapeId> getInlineableShapes(
@@ -193,6 +226,7 @@ public final class SmithyIdlModelSerializer {
             String inputSuffix,
             String outputSuffix
     ) {
+        OperationIndex operationIndex = OperationIndex.of(fullModel);
         Set<ShapeId> inlineableShapes = new HashSet<>();
         for (Shape shape : shapes) {
             if (!shape.isOperationShape()) {
@@ -201,14 +235,14 @@ public final class SmithyIdlModelSerializer {
             OperationShape operation = shape.asOperationShape().get();
             if (!operation.getInputShape().equals(UnitTypeTrait.UNIT)) {
                 Shape inputShape = fullModel.expectShape(operation.getInputShape());
-                if (shapes.contains(inputShape) && inputShape.hasTrait(InputTrait.ID)
+                if (shapes.contains(inputShape) && shouldInlineInputShape(operationIndex, inputShape)
                         && inputShape.getId().getName().equals(operation.getId().getName() + inputSuffix)) {
                     inlineableShapes.add(operation.getInputShape());
                 }
             }
             if (!operation.getOutputShape().equals(UnitTypeTrait.UNIT)) {
                 Shape outputShape = fullModel.expectShape(operation.getOutputShape());
-                if (shapes.contains(outputShape) && outputShape.hasTrait(OutputTrait.ID)
+                if (shapes.contains(outputShape) && shouldInlineOutputShape(operationIndex, outputShape)
                         && outputShape.getId().getName().equals(operation.getId().getName() + outputSuffix)) {
                     inlineableShapes.add(operation.getOutputShape());
                 }
@@ -217,13 +251,25 @@ public final class SmithyIdlModelSerializer {
         return inlineableShapes;
     }
 
+    private boolean shouldInlineInputShape(OperationIndex operationIndex, Shape target) {
+        // Only allow coercion if the shape is only used as one input.
+        return target.hasTrait(InputTrait.ID)
+                || (shouldCoerceInlineIo && operationIndex.getInputBindings(target).size() == 1);
+    }
+
+    private boolean shouldInlineOutputShape(OperationIndex operationIndex, Shape target) {
+        // Only allow coercion if the shape is only used as one output.
+        return target.hasTrait(OutputTrait.ID)
+                || (shouldCoerceInlineIo && operationIndex.getOutputBindings(target).size() == 1);
+    }
+
     private Pair<String, String> determineInlineSuffixes(Model fullModel, Collection<Shape> shapes) {
         if (!inferInlineIoSuffixes) {
             return Pair.of(inlineInputSuffix, inlineOutputSuffix);
         }
 
-        Set<String> inputSuffixes = new HashSet<>();
-        Set<String> outputSuffixes = new HashSet<>();
+        Map<String, Integer> inputSuffixes = new LinkedHashMap<>();
+        Map<String, Integer> outputSuffixes = new LinkedHashMap<>();
         for (Shape shape : shapes) {
             if (!shape.isOperationShape()) {
                 continue;
@@ -234,15 +280,28 @@ public final class SmithyIdlModelSerializer {
             StructureShape output = fullModel.expectShape(operation.getOutputShape(), StructureShape.class);
 
             if (shapes.contains(input) && input.getId().getName().startsWith(operation.getId().getName())) {
-                inputSuffixes.add(input.getId().getName().substring(operation.getId().getName().length()));
+                String inputSuffix = input.getId().getName().substring(operation.getId().getName().length());
+                int inputCount = inputSuffixes.getOrDefault(inputSuffix, 0);
+                inputSuffixes.put(inputSuffix, ++inputCount);
             }
 
             if (shapes.contains(output) && output.getId().getName().startsWith(operation.getId().getName())) {
-                outputSuffixes.add(output.getId().getName().substring(operation.getId().getName().length()));
+                String outputSuffix = output.getId().getName().substring(operation.getId().getName().length());
+                int outputCount = outputSuffixes.getOrDefault(outputSuffix, 0);
+                outputSuffixes.put(outputSuffix, ++outputCount);
             }
         }
-        String inputSuffix = inputSuffixes.size() == 1 ? inputSuffixes.iterator().next() : inlineInputSuffix;
-        String outputSuffix = outputSuffixes.size() == 1 ? outputSuffixes.iterator().next() : inlineOutputSuffix;
+
+        String inputSuffix = inputSuffixes.entrySet()
+                .stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(inlineInputSuffix);
+        String outputSuffix = outputSuffixes.entrySet()
+                .stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(inlineOutputSuffix);
         return Pair.of(inputSuffix, outputSuffix);
     }
 
@@ -251,11 +310,10 @@ public final class SmithyIdlModelSerializer {
             String namespace,
             Collection<Shape> shapes,
             String inputSuffix,
-            String outputSuffix
+            String outputSuffix,
+            boolean addMetadata
     ) {
         SmithyCodeWriter codeWriter = new SmithyCodeWriter(null, fullModel);
-        NodeSerializer nodeSerializer = new NodeSerializer(codeWriter, fullModel);
-
         codeWriter.write("$$version: \"$L\"", Model.MODEL_VERSION);
 
         if (shapes.stream().anyMatch(Shape::isOperationShape)) {
@@ -270,23 +328,21 @@ public final class SmithyIdlModelSerializer {
 
         codeWriter.write("");
 
-        Comparator<Map.Entry<String, Node>> comparator = componentOrder.metadataComparator();
-
-        // Write the full metadata into every output. When loaded back together the conflicts will be ignored,
-        // but if they're separated out then each file will still have all the context.
-        fullModel.getMetadata().entrySet().stream()
-                .filter(entry -> metadataFilter.test(entry.getKey()))
-                .sorted(comparator)
-                .forEach(entry -> {
-                    codeWriter.trimTrailingSpaces(false)
-                            .writeInline("metadata $K = ", entry.getKey())
-                            .trimTrailingSpaces();
-                    nodeSerializer.serialize(entry.getValue());
-                    codeWriter.write("");
-                });
-
-        if (!fullModel.getMetadata().isEmpty()) {
-            codeWriter.write("");
+        if (addMetadata) {
+            NodeSerializer nodeSerializer = new NodeSerializer(codeWriter, fullModel);
+            Comparator<Map.Entry<String, Node>> comparator = componentOrder.metadataComparator();
+            fullModel.getMetadata()
+                    .entrySet()
+                    .stream()
+                    .filter(entry -> metadataFilter.test(entry.getKey()))
+                    .sorted(comparator)
+                    .forEach(entry -> {
+                        codeWriter.trimTrailingSpaces(false)
+                                .writeInline("metadata $K = ", entry.getKey())
+                                .trimTrailingSpaces();
+                        nodeSerializer.serialize(entry.getValue());
+                        codeWriter.write("");
+                    });
         }
 
         if (namespace != null) {
@@ -330,6 +386,7 @@ public final class SmithyIdlModelSerializer {
         private String inlineInputSuffix = DEFAULT_INLINE_INPUT_SUFFIX;
         private String inlineOutputSuffix = DEFAULT_INLINE_OUTPUT_SUFFIX;
         private boolean inferInlineIoSuffixes = false;
+        private boolean shouldCoerceInlineIo = false;
 
         public Builder() {}
 
@@ -457,11 +514,30 @@ public final class SmithyIdlModelSerializer {
          * <p>The suffixes set by {@link #inlineInputSuffix(String)} and {@link #inlineOutputSuffix(String)}
          * will be the default values.
          *
-         * @param shouldinferInlineIoSuffixes Whether inline IO suffixes should be inferred for each file.
+         * @param shouldInferInlineIoSuffixes Whether inline IO suffixes should be inferred for each file.
          * @return Returns the builder.
          */
-        public Builder inferInlineIoSuffixes(boolean shouldinferInlineIoSuffixes) {
-            this.inferInlineIoSuffixes = shouldinferInlineIoSuffixes;
+        public Builder inferInlineIoSuffixes(boolean shouldInferInlineIoSuffixes) {
+            this.inferInlineIoSuffixes = shouldInferInlineIoSuffixes;
+            return this;
+        }
+
+        /**
+         * Determines whether inline IO should be coerced for shapes operation input
+         * and output that does not have the {@code @input} or {@code @output} trait,
+         * respectively.
+         *
+         * <p>If true, this will determine any shared IO suffixes for each file. Only the
+         * shapes present within each file will impact what that file's suffixes will be.
+         *
+         * <p>The suffixes set by {@link #inlineInputSuffix(String)} and {@link #inlineOutputSuffix(String)}
+         * will be the default values.
+         *
+         * @param shouldCoerceInlineIo Whether inline IO should be coerced for each file.
+         * @return Returns the builder.
+         */
+        public Builder coerceInlineIo(boolean shouldCoerceInlineIo) {
+            this.shouldCoerceInlineIo = shouldCoerceInlineIo;
             return this;
         }
 
@@ -552,14 +628,14 @@ public final class SmithyIdlModelSerializer {
 
         private void writeShapeMembers(Collection<MemberShape> members) {
             if (members.isEmpty()) {
-                // When the are no members to write, put "{}" on the same line.
+                // When there are no members to write, put "{}" on the same line.
                 codeWriter.writeInline("{}").write("");
             } else {
                 codeWriter.openBlock("{", "}", () -> {
                     for (MemberShape member : members) {
                         serializeTraits(member.getAllTraits(), TraitFeature.MEMBER);
                         String assignment = "";
-                        if (member.hasTrait(DefaultTrait.class)) {
+                        if (member.hasTrait(DefaultTrait.ID)) {
                             assignment = " = " + Node.printJson(member.expectTrait(DefaultTrait.class).toNode());
                         }
                         codeWriter.write("$L: $I$L", member.getMemberName(), member.getTarget(), assignment);
@@ -629,8 +705,9 @@ public final class SmithyIdlModelSerializer {
 
             Comparator<Trait> traitComparator = componentOrder.toShapeIdComparator();
 
-            traits.values().stream()
-                    .filter(trait -> noSpecialDocsSyntax || !(trait instanceof DocumentationTrait))
+            traits.values()
+                    .stream()
+                    .filter(trait -> noSpecialDocsSyntax || !trait.toShapeId().equals(DocumentationTrait.ID))
                     // The default and enumValue traits are serialized using the assignment syntactic sugar.
                     .filter(trait -> {
                         if (trait instanceof EnumValueTrait) {
@@ -750,10 +827,19 @@ public final class SmithyIdlModelSerializer {
             codeWriter.openBlock("{");
             if (!shape.getIdentifiers().isEmpty()) {
                 codeWriter.openBlock("identifiers: {");
-                shape.getIdentifiers().entrySet().stream()
+                shape.getIdentifiers()
+                        .entrySet()
+                        .stream()
                         .sorted(Map.Entry.comparingByKey())
                         .forEach(entry -> codeWriter.write(
-                                "$L: $I", entry.getKey(), entry.getValue()));
+                                "$L: $I",
+                                entry.getKey(),
+                                entry.getValue()));
+                codeWriter.closeBlock("}");
+            }
+            if (shape.hasProperties()) {
+                codeWriter.openBlock("properties: {");
+                shape.getProperties().forEach((name, shapeId) -> codeWriter.write("$L: $I", name, shapeId));
                 codeWriter.closeBlock("}");
             }
 
@@ -766,11 +852,6 @@ public final class SmithyIdlModelSerializer {
             codeWriter.writeOptionalIdList("operations", shape.getIntroducedOperations());
             codeWriter.writeOptionalIdList("collectionOperations", shape.getCollectionOperations());
             codeWriter.writeOptionalIdList("resources", shape.getIntroducedResources());
-            if (shape.hasProperties()) {
-              codeWriter.openBlock("properties: {");
-              shape.getProperties().forEach((name, shapeId) -> codeWriter.write("$L: $I", name, shapeId));
-              codeWriter.closeBlock("}");
-            }
             codeWriter.closeBlock("}");
             codeWriter.write("");
             return null;
@@ -833,7 +914,7 @@ public final class SmithyIdlModelSerializer {
         }
 
         private boolean hasOnlyDefaultTrait(Shape shape, ShapeId defaultTrait) {
-            return shape.getAllTraits().size() == 1 && shape.hasTrait(defaultTrait);
+            return shape.getAllTraits().isEmpty() || (shape.getAllTraits().size() == 1 && shape.hasTrait(defaultTrait));
         }
     }
 
@@ -974,12 +1055,13 @@ public final class SmithyIdlModelSerializer {
             }
 
             // If we're looking at a structure or union shape, we'll need to get the member shape based on the
-            // node key. Here we pre-compute a mapping so we don't have to traverse the member list every time.
+            // node key. Here we pre-compute a mapping, so we don't have to traverse the member list every time.
             Map<String, MemberShape> members;
             if (shape == null) {
                 members = Collections.emptyMap();
             } else {
-                members = shape.members().stream()
+                members = shape.members()
+                        .stream()
                         .collect(Collectors.toMap(MemberShape::getMemberName, Function.identity()));
             }
 
@@ -1004,11 +1086,11 @@ public final class SmithyIdlModelSerializer {
     }
 
     /**
-     * Extension of {@link CodeWriter} that provides additional convenience methods.
+     * Extension of {@link SimpleCodeWriter} that provides additional convenience methods.
      *
-     * <p>Provides a built in $I formatter that formats shape ids, automatically trimming namespace where possible.
+     * <p>Provides a built-in $I formatter that formats shape ids, automatically trimming namespace where possible.
      */
-    private static final class SmithyCodeWriter extends CodeWriter {
+    private static final class SmithyCodeWriter extends SimpleCodeWriter {
         private static final Pattern UNQUOTED_KEY_STRING = Pattern.compile("[a-zA-Z_][a-zA-Z_0-9]*");
         private final String namespace;
         private final Model model;
@@ -1138,7 +1220,8 @@ public final class SmithyIdlModelSerializer {
             if (imports.isEmpty()) {
                 return contents;
             }
-            String importString = imports.stream().sorted()
+            String importString = imports.stream()
+                    .sorted()
                     .map(shapeId -> String.format("use %s", shapeId.toString()))
                     .collect(Collectors.joining("\n"));
             return importString + "\n\n" + contents;

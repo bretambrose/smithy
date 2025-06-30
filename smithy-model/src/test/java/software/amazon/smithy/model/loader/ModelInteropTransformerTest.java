@@ -1,3 +1,7 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package software.amazon.smithy.model.loader;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -92,8 +96,8 @@ public class ModelInteropTransformerTest {
         assertThat(ShapeId.from("smithy.example#Foo$boxedMember"), targetsShape(result, "PrimitiveInteger"));
 
         Shape shape = result.getResult().get().expectShape(ShapeId.from("smithy.example#Foo$boxedMember"));
-        assertThat(shape.hasTrait(BoxTrait.class), is(true));
-        assertThat(shape.hasTrait(DefaultTrait.class), is(true));
+        assertThat(shape.hasTrait(BoxTrait.ID), is(true));
+        assertThat(shape.hasTrait(DefaultTrait.ID), is(true));
         assertThat(shape.expectTrait(DefaultTrait.class).toNode().isNullNode(), is(true));
 
         assertThat(ShapeId.from("smithy.example#Foo$previouslyBoxedTarget"), not(addedDefaultTrait(result)));
@@ -144,7 +148,8 @@ public class ModelInteropTransformerTest {
         }
 
         private static UpgradeTestCase createFromDirectory(String directory) {
-            try (Stream<Path> paths = Files.walk(Paths.get(ModelInteropTransformerTest.class.getResource(directory).toURI()))) {
+            try (Stream<Path> paths =
+                    Files.walk(Paths.get(ModelInteropTransformerTest.class.getResource(directory).toURI()))) {
                 UpgradeTestCase testCase = new UpgradeTestCase();
                 paths.filter(Files::isRegularFile).forEach(file -> {
                     if (file.endsWith("upgraded.smithy") || file.endsWith("upgraded.json")) {
@@ -167,24 +172,25 @@ public class ModelInteropTransformerTest {
         return ShapeMatcher.builderFor(MemberShape.class, result)
                 .description("Targets " + shapeName)
                 .addAssertion(member -> member.getTarget()
-                                      .equals(ShapeId.fromOptionalNamespace(Prelude.NAMESPACE, shapeName)),
-                              member -> "targeted " + member.getTarget())
+                        .equals(ShapeId.fromOptionalNamespace(Prelude.NAMESPACE, shapeName)),
+                        member -> "targeted " + member.getTarget())
                 .build();
     }
 
     private static Matcher<ShapeId> addedDefaultTrait(ValidatedResult<Model> result) {
         return ShapeMatcher.builderFor(MemberShape.class, result)
                 .description("member to have a default trait")
-                .addAssertion(member -> member.hasTrait(DefaultTrait.class),
-                              member -> "no @default trait")
+                .addAssertion(member -> member.hasTrait(DefaultTrait.ID),
+                        member -> "no @default trait")
                 .build();
     }
 
     private static Matcher<ShapeId> v2ShapeUsesBoxTrait(ValidatedResult<Model> result) {
         return ShapeMatcher.builderFor(MemberShape.class, result)
                 .description("v2 shape uses box trait")
-                .addEventAssertion(Validator.MODEL_ERROR, Severity.ERROR,
-                                   "@box is not supported in Smithy IDL 2.0")
+                .addEventAssertion(Validator.MODEL_ERROR,
+                        Severity.ERROR,
+                        "@box is not supported in Smithy IDL 2.0")
                 .build();
     }
 
@@ -195,27 +201,26 @@ public class ModelInteropTransformerTest {
     public void ensuresConsistentNullabilityAcrossVersions() {
         Pattern splitPattern = Pattern.compile("\r\n|\r|\n");
         List<Pair<String, String>> cases = ListUtils.of(
-            Pair.of("1-to-2", "nullableBooleanBoxedTarget"),
-            Pair.of("1-to-2", "nullableBooleanBoxedNonPreludeTarget"),
-            Pair.of("1-to-2", "nullableBooleanInV1BoxedTargetRequired"),
-            Pair.of("1-to-2", "nonNullableBooleanUnboxedTarget"),
-            Pair.of("1-to-2", "nullableBooleanBoxedMember"),
-            Pair.of("1-to-2", "nonNullableBooleanUnboxedCustomTarget"),
-            Pair.of("1-to-2", "nullableIntegerBoxedTarget"),
-            Pair.of("1-to-2", "nullableIntegerBoxedNonPreludeTarget"),
-            Pair.of("1-to-2", "nullableIntegerInV1BoxedTargetRequired"),
-            Pair.of("1-to-2", "nonNullableIntegerUnboxedTarget"),
-            Pair.of("1-to-2", "nullableIntegerBoxedMember"),
-            Pair.of("1-to-2", "nonNullableIntegerUnboxedCustomTarget"),
+                Pair.of("1-to-2", "nullableBooleanBoxedTarget"),
+                Pair.of("1-to-2", "nullableBooleanBoxedNonPreludeTarget"),
+                Pair.of("1-to-2", "nullableBooleanInV1BoxedTargetRequired"),
+                Pair.of("1-to-2", "nonNullableBooleanUnboxedTarget"),
+                Pair.of("1-to-2", "nullableBooleanBoxedMember"),
+                Pair.of("1-to-2", "nonNullableBooleanUnboxedCustomTarget"),
+                Pair.of("1-to-2", "nullableIntegerBoxedTarget"),
+                Pair.of("1-to-2", "nullableIntegerBoxedNonPreludeTarget"),
+                Pair.of("1-to-2", "nullableIntegerInV1BoxedTargetRequired"),
+                Pair.of("1-to-2", "nonNullableIntegerUnboxedTarget"),
+                Pair.of("1-to-2", "nullableIntegerBoxedMember"),
+                Pair.of("1-to-2", "nonNullableIntegerUnboxedCustomTarget"),
 
-            Pair.of("2-to-1", "booleanDefaultZeroValueToNonNullable"),
-            Pair.of("2-to-1", "booleanDefaultNonZeroValueToNullable"),
-            Pair.of("2-to-1", "booleanRequiredToNullable"),
-            Pair.of("2-to-1", "booleanDefaultWithAddedTraitToNullable"),
-            Pair.of("2-to-1", "booleanDefaultWithClientOptionalTraitToNullable"),
-            Pair.of("2-to-1", "intEnumSetToZeroValueToNonNullable"),
-            Pair.of("2-to-1", "booleanDefaultZeroValueToNonNullablePrelude")
-        );
+                Pair.of("2-to-1", "booleanDefaultZeroValueToNonNullable"),
+                Pair.of("2-to-1", "booleanDefaultNonZeroValueToNullable"),
+                Pair.of("2-to-1", "booleanRequiredToNullable"),
+                Pair.of("2-to-1", "booleanDefaultWithAddedTraitToNullable"),
+                Pair.of("2-to-1", "booleanDefaultWithClientOptionalTraitToNullable"),
+                Pair.of("2-to-1", "intEnumSetToZeroValueToNonNullable"),
+                Pair.of("2-to-1", "booleanDefaultZeroValueToNonNullablePrelude"));
 
         cases.forEach(pair -> {
             String suite = pair.left;
@@ -260,11 +265,11 @@ public class ModelInteropTransformerTest {
         boolean isBoxed = member.getMemberTrait(model, BoxTrait.class).isPresent();
         result.put("v1-box", isBoxed);
         result.put("v1-client-zero-value",
-                   index.isMemberNullable(member, NullableIndex.CheckMode.CLIENT_ZERO_VALUE_V1));
+                index.isMemberNullable(member, NullableIndex.CheckMode.CLIENT_ZERO_VALUE_V1));
         result.put("v2", index.isMemberNullable(model.expectShape(shape, MemberShape.class)));
 
         String reason = "Expected " + name + " to have nullability of " + expected + " but found "
-                        + result + " (round trip #" + roundTrip + ')';
+                + result + " (round trip #" + roundTrip + ')';
 
         assertThat(reason, expected, equalTo(result));
 
@@ -272,7 +277,7 @@ public class ModelInteropTransformerTest {
         boolean isDeprecatedIndexWorking = index.isNullable(member);
         if (!isDeprecatedIndexWorking == result.get("v1-client-zero-value")) {
             String reasonBox = "Expected deprecated index checks to be " + result.get("v1") + " for " + name
-                               + "; traits: " + member.getAllTraits() + "; round trip " + roundTrip;
+                    + "; traits: " + member.getAllTraits() + "; round trip " + roundTrip;
             Assertions.fail(reasonBox);
         }
     }
@@ -283,18 +288,19 @@ public class ModelInteropTransformerTest {
     @Test
     public void boxTraitOnRootShapeIsNotLossyWhenRoundTripped() {
         Model model = Model.assembler()
-                .addUnparsedModel("foo.smithy", "$version: \"1.0\"\n"
-                                                + "namespace smithy.example\n"
-                                                + "@box\n"
-                                                + "integer MyInteger\n"
-                                                + "\n"
-                                                + "integer PrimitiveInteger\n"
-                                                + "\n"
-                                                + "structure Foo {\n"
-                                                + "    @box\n"
-                                                + "    baz: MyInteger\n"
-                                                + "    bam: PrimitiveInteger\n"
-                                                +"}\n")
+                .addUnparsedModel("foo.smithy",
+                        "$version: \"1.0\"\n"
+                                + "namespace smithy.example\n"
+                                + "@box\n"
+                                + "integer MyInteger\n"
+                                + "\n"
+                                + "integer PrimitiveInteger\n"
+                                + "\n"
+                                + "structure Foo {\n"
+                                + "    @box\n"
+                                + "    baz: MyInteger\n"
+                                + "    bam: PrimitiveInteger\n"
+                                + "}\n")
                 .assemble()
                 .unwrap();
 
@@ -314,9 +320,9 @@ public class ModelInteropTransformerTest {
         ShapeId primitiveInteger = ShapeId.from("smithy.example#PrimitiveInteger");
         ShapeId fooBam = ShapeId.from("smithy.example#Foo$bam");
 
-        assertThat(model.expectShape(myInteger).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(foo).hasTrait(BoxTrait.class), is(false));
-        assertThat(model.expectShape(fooBaz).hasTrait(BoxTrait.class), is(true));
+        assertThat(model.expectShape(myInteger).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(foo).hasTrait(BoxTrait.ID), is(false));
+        assertThat(model.expectShape(fooBaz).hasTrait(BoxTrait.ID), is(true));
 
         Node serialized = ModelSerializer.builder().build().serialize(model);
         String raw = Node.prettyPrintJson(serialized);
@@ -325,64 +331,65 @@ public class ModelInteropTransformerTest {
                 .assemble()
                 .unwrap();
 
-        assertThat(model2.expectShape(myInteger).hasTrait(BoxTrait.class), is(true));
-        assertThat(model2.expectShape(myInteger).hasTrait(DefaultTrait.class), is(false));
-        assertThat(model2.expectShape(foo).hasTrait(BoxTrait.class), is(false));
-        assertThat(model2.expectShape(fooBaz).hasTrait(DefaultTrait.class), is(true));
+        assertThat(model2.expectShape(myInteger).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model2.expectShape(myInteger).hasTrait(DefaultTrait.ID), is(false));
+        assertThat(model2.expectShape(foo).hasTrait(BoxTrait.ID), is(false));
+        assertThat(model2.expectShape(fooBaz).hasTrait(DefaultTrait.ID), is(true));
         assertThat(model2.expectShape(fooBaz).expectTrait(DefaultTrait.class).toNode(), equalTo(Node.nullNode()));
 
         // This member gets a synthetic box trait because the default value is set to null.
-        assertThat(model2.expectShape(fooBaz).hasTrait(BoxTrait.class), is(true));
+        assertThat(model2.expectShape(fooBaz).hasTrait(BoxTrait.ID), is(true));
 
         // Primitive integer gets a synthetic default trait and no box trait.
-        assertThat(model2.expectShape(primitiveInteger).hasTrait(DefaultTrait.class), is(true));
-        assertThat(model2.expectShape(primitiveInteger).hasTrait(BoxTrait.class), is(false));
+        assertThat(model2.expectShape(primitiveInteger).hasTrait(DefaultTrait.ID), is(true));
+        assertThat(model2.expectShape(primitiveInteger).hasTrait(BoxTrait.ID), is(false));
 
         // The member referring to PrimitiveInteger gets a synthetic default trait and no box trait.
-        assertThat(model2.expectShape(fooBam).hasTrait(DefaultTrait.class), is(true));
-        assertThat(model2.expectShape(fooBam).hasTrait(BoxTrait.class), is(false));
+        assertThat(model2.expectShape(fooBam).hasTrait(DefaultTrait.ID), is(true));
+        assertThat(model2.expectShape(fooBam).hasTrait(BoxTrait.ID), is(false));
     }
 
     @Test
     public void boxTraitOnlyAddedToRootWhenNotSetToZeroValueDefault() {
         Model model = Model.assembler()
-                .addUnparsedModel("foo.smithy", "$version: \"2.0\"\n"
-                                                + "namespace smithy.example\n"
-                                                + "\n"
-                                                + "@default(\"\")\n"
-                                                + "string DefaultString\n"
-                                                + "\n"
-                                                + "integer BoxedInteger\n"
-                                                + "\n"
-                                                + "@default(1)\n"
-                                                + "integer BoxedIntegerWithDefault\n"
-                                                + "\n"
-                                                + "@default(0)\n"
-                                                + "integer PrimitiveInteger\n"
-                                                + "\n"
-                                                + "intEnum BoxedIntEnum {\n"
-                                                + "    ONE = 1\n"
-                                                + "}\n"
-                                                + "\n"
-                                                + "@default(1)\n"
-                                                + "intEnum BoxedIntEnumWithDefault {\n"
-                                                + "    ONE = 1\n"
-                                                + "}\n"
-                                                + "\n"
-                                                + "@default(0)\n"
-                                                + "intEnum PrimitiveIntEnum {\n"
-                                                + "    ZERO = 0\n"
-                                                + "}\n"
-                                                + "\n"
-                                                + "structure Foo {\n"
-                                                + "    DefaultString: DefaultString = \"\"\n"
-                                                + "    BoxedInteger: BoxedInteger\n"
-                                                + "    PrimitiveInteger: PrimitiveInteger = 0\n"
-                                                + "    BoxedIntegerWithDefault: BoxedIntegerWithDefault = 1\n"
-                                                + "    BoxedIntEnum: BoxedIntEnum\n"
-                                                + "    BoxedIntEnumWithDefault: BoxedIntEnumWithDefault = 1\n"
-                                                + "    PrimitiveIntEnum: PrimitiveIntEnum = 0\n"
-                                                +"}\n")
+                .addUnparsedModel("foo.smithy",
+                        "$version: \"2.0\"\n"
+                                + "namespace smithy.example\n"
+                                + "\n"
+                                + "@default(\"\")\n"
+                                + "string DefaultString\n"
+                                + "\n"
+                                + "integer BoxedInteger\n"
+                                + "\n"
+                                + "@default(1)\n"
+                                + "integer BoxedIntegerWithDefault\n"
+                                + "\n"
+                                + "@default(0)\n"
+                                + "integer PrimitiveInteger\n"
+                                + "\n"
+                                + "intEnum BoxedIntEnum {\n"
+                                + "    ONE = 1\n"
+                                + "}\n"
+                                + "\n"
+                                + "@default(1)\n"
+                                + "intEnum BoxedIntEnumWithDefault {\n"
+                                + "    ONE = 1\n"
+                                + "}\n"
+                                + "\n"
+                                + "@default(0)\n"
+                                + "intEnum PrimitiveIntEnum {\n"
+                                + "    ZERO = 0\n"
+                                + "}\n"
+                                + "\n"
+                                + "structure Foo {\n"
+                                + "    DefaultString: DefaultString = \"\"\n"
+                                + "    BoxedInteger: BoxedInteger\n"
+                                + "    PrimitiveInteger: PrimitiveInteger = 0\n"
+                                + "    BoxedIntegerWithDefault: BoxedIntegerWithDefault = 1\n"
+                                + "    BoxedIntEnum: BoxedIntEnum\n"
+                                + "    BoxedIntEnumWithDefault: BoxedIntEnumWithDefault = 1\n"
+                                + "    PrimitiveIntEnum: PrimitiveIntEnum = 0\n"
+                                + "}\n")
                 .assemble()
                 .unwrap();
 
@@ -417,46 +424,46 @@ public class ModelInteropTransformerTest {
         ShapeId fooPrimitiveIntEnum = ShapeId.from("smithy.example#Foo$PrimitiveIntEnum");
 
         // Do not box strings for v1 compatibility.
-        assertThat(model.expectShape(defaultString).hasTrait(BoxTrait.class), is(false));
-        assertThat(model.expectShape(fooDefaultString).hasTrait(BoxTrait.class), is(false));
-        assertThat(model.expectShape(fooDefaultString).hasTrait(DefaultTrait.class), is(true));
-        assertThat(model.expectShape(defaultString).hasTrait(DefaultTrait.class), is(true));
+        assertThat(model.expectShape(defaultString).hasTrait(BoxTrait.ID), is(false));
+        assertThat(model.expectShape(fooDefaultString).hasTrait(BoxTrait.ID), is(false));
+        assertThat(model.expectShape(fooDefaultString).hasTrait(DefaultTrait.ID), is(true));
+        assertThat(model.expectShape(defaultString).hasTrait(DefaultTrait.ID), is(true));
 
         // Add box to BoxedInteger because it has no default trait.
-        assertThat(model.expectShape(boxedInteger).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(fooBoxedInteger).hasTrait(BoxTrait.class), is(false)); // no need to box member too
-        assertThat(model.expectShape(boxedInteger).hasTrait(DefaultTrait.class), is(false));
-        assertThat(model.expectShape(fooBoxedInteger).hasTrait(DefaultTrait.class), is(false));
+        assertThat(model.expectShape(boxedInteger).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(fooBoxedInteger).hasTrait(BoxTrait.ID), is(false)); // no need to box member too
+        assertThat(model.expectShape(boxedInteger).hasTrait(DefaultTrait.ID), is(false));
+        assertThat(model.expectShape(fooBoxedInteger).hasTrait(DefaultTrait.ID), is(false));
 
         // Add box to BoxedIntegerWithDefault because it has a default that isn't the v1 zero value.
-        assertThat(model.expectShape(boxedIntegerWithDefault).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(fooBoxedIntegerWithDefault).hasTrait(BoxTrait.class), is(false)); // no need to box the member too
-        assertThat(model.expectShape(boxedIntegerWithDefault).hasTrait(DefaultTrait.class), is(true));
-        assertThat(model.expectShape(fooBoxedIntegerWithDefault).hasTrait(DefaultTrait.class), is(true));
+        assertThat(model.expectShape(boxedIntegerWithDefault).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(fooBoxedIntegerWithDefault).hasTrait(BoxTrait.ID), is(false)); // no need to box the member too
+        assertThat(model.expectShape(boxedIntegerWithDefault).hasTrait(DefaultTrait.ID), is(true));
+        assertThat(model.expectShape(fooBoxedIntegerWithDefault).hasTrait(DefaultTrait.ID), is(true));
 
         // No box trait on PrimitiveInteger because it has a zero value default.
-        assertThat(model.expectShape(primitiveInteger).hasTrait(BoxTrait.class), is(false));
-        assertThat(model.expectShape(fooPrimitiveInteger).hasTrait(BoxTrait.class), is(false));
-        assertThat(model.expectShape(primitiveInteger).hasTrait(DefaultTrait.class), is(true));
-        assertThat(model.expectShape(fooPrimitiveInteger).hasTrait(DefaultTrait.class), is(true));
+        assertThat(model.expectShape(primitiveInteger).hasTrait(BoxTrait.ID), is(false));
+        assertThat(model.expectShape(fooPrimitiveInteger).hasTrait(BoxTrait.ID), is(false));
+        assertThat(model.expectShape(primitiveInteger).hasTrait(DefaultTrait.ID), is(true));
+        assertThat(model.expectShape(fooPrimitiveInteger).hasTrait(DefaultTrait.ID), is(true));
 
         // Add box to BoxedIntEnum because it has no default trait.
-        assertThat(model.expectShape(boxedIntEnum).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(fooBoxedIntEnum).hasTrait(BoxTrait.class), is(false)); // no need to box the member too
-        assertThat(model.expectShape(boxedIntEnum).hasTrait(DefaultTrait.class), is(false));
-        assertThat(model.expectShape(fooBoxedIntEnum).hasTrait(DefaultTrait.class), is(false));
+        assertThat(model.expectShape(boxedIntEnum).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(fooBoxedIntEnum).hasTrait(BoxTrait.ID), is(false)); // no need to box the member too
+        assertThat(model.expectShape(boxedIntEnum).hasTrait(DefaultTrait.ID), is(false));
+        assertThat(model.expectShape(fooBoxedIntEnum).hasTrait(DefaultTrait.ID), is(false));
 
         // Add box to BoxedIntEnumWithDefault because it has a default that isn't the v1 zero value.
-        assertThat(model.expectShape(boxedIntEnumWithDefault).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(fooBoxedIntEnumWithDefault).hasTrait(BoxTrait.class), is(false)); // no need to box the member too
-        assertThat(model.expectShape(boxedIntEnumWithDefault).hasTrait(DefaultTrait.class), is(true));
-        assertThat(model.expectShape(fooBoxedIntEnumWithDefault).hasTrait(DefaultTrait.class), is(true));
+        assertThat(model.expectShape(boxedIntEnumWithDefault).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(fooBoxedIntEnumWithDefault).hasTrait(BoxTrait.ID), is(false)); // no need to box the member too
+        assertThat(model.expectShape(boxedIntEnumWithDefault).hasTrait(DefaultTrait.ID), is(true));
+        assertThat(model.expectShape(fooBoxedIntEnumWithDefault).hasTrait(DefaultTrait.ID), is(true));
 
         // No box trait on PrimitiveIntEnum because it has a zero value default.
-        assertThat(model.expectShape(primitiveIntEnum).hasTrait(BoxTrait.class), is(false));
-        assertThat(model.expectShape(fooPrimitiveIntEnum).hasTrait(BoxTrait.class), is(false));
-        assertThat(model.expectShape(primitiveIntEnum).hasTrait(DefaultTrait.class), is(true));
-        assertThat(model.expectShape(fooPrimitiveIntEnum).hasTrait(DefaultTrait.class), is(true));
+        assertThat(model.expectShape(primitiveIntEnum).hasTrait(BoxTrait.ID), is(false));
+        assertThat(model.expectShape(fooPrimitiveIntEnum).hasTrait(BoxTrait.ID), is(false));
+        assertThat(model.expectShape(primitiveIntEnum).hasTrait(DefaultTrait.ID), is(true));
+        assertThat(model.expectShape(fooPrimitiveIntEnum).hasTrait(DefaultTrait.ID), is(true));
     }
 
     @Test
@@ -471,11 +478,12 @@ public class ModelInteropTransformerTest {
         ShapeId shapeId1 = ShapeId.from("smithy.example#MyLong1");
         Shape shape1 = model1.expectShape(shapeId1);
 
-        assertThat(shape1.hasTrait(RangeTrait.class), is(true));
+        assertThat(shape1.hasTrait(RangeTrait.ID), is(true));
         // Make sure the range trait wasn't modified.
         assertThat(shape1.expectTrait(RangeTrait.class).getMin().get().toString(), equalTo("1"));
-        assertThat(result.getValidationEvents().stream()
-                           .anyMatch(event -> event.getMessage().contains("must be greater than or equal to 1")),
-                   is(true));
+        assertThat(result.getValidationEvents()
+                .stream()
+                .anyMatch(event -> event.getMessage().contains("must be greater than or equal to 1")),
+                is(true));
     }
 }

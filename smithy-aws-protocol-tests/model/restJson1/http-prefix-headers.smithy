@@ -28,33 +28,50 @@ apply HttpPrefixHeaders @httpRequestTests([
         uri: "/HttpPrefixHeaders",
         body: "",
         headers: {
-            "X-Foo": "Foo",
-            "X-Foo-Abc": "Abc value",
-            "X-Foo-Def": "Def value",
+            "x-foo": "Foo",
+            "x-foo-abc": "Abc value",
+            "x-foo-def": "Def value",
         },
         params: {
             foo: "Foo",
             fooMap: {
-                Abc: "Abc value",
-                Def: "Def value",
+                abc: "Abc value",
+                def: "Def value",
             }
         }
     },
     {
         id: "RestJsonHttpPrefixHeadersAreNotPresent",
-        documentation: "No prefix headers are serialized because the value is empty",
+        documentation: "No prefix headers are serialized because the value is not present",
         protocol: restJson1,
         method: "GET",
         uri: "/HttpPrefixHeaders",
         body: "",
         headers: {
-            "X-Foo": "Foo"
+            "x-foo": "Foo"
         },
         params: {
             foo: "Foo",
             fooMap: {}
         },
         appliesTo: "client"
+    },
+    {
+        id: "RestJsonHttpPrefixEmptyHeaders",
+        documentation: "Serialize prefix headers were the value is present but empty"
+        protocol: restJson1,
+        method: "GET",
+        uri: "/HttpPrefixHeaders",
+        body: "",
+        params: {
+            fooMap: {
+                abc: ""
+            }
+        },
+        headers: {
+            "x-foo-abc": ""
+        }
+        appliesTo: "client",
     },
 ])
 
@@ -65,15 +82,15 @@ apply HttpPrefixHeaders @httpResponseTests([
         protocol: restJson1,
         code: 200,
         headers: {
-            "X-Foo": "Foo",
-            "X-Foo-Abc": "Abc value",
-            "X-Foo-Def": "Def value",
+            "x-foo": "Foo",
+            "x-foo-abc": "Abc value",
+            "x-foo-def": "Def value",
         },
         params: {
             foo: "Foo",
             fooMap: {
-                Abc: "Abc value",
-                Def: "Def value",
+                abc: "Abc value",
+                def: "Def value",
             }
         }
     },
@@ -81,19 +98,19 @@ apply HttpPrefixHeaders @httpResponseTests([
 
 @input
 structure HttpPrefixHeadersInput {
-    @httpHeader("X-Foo")
+    @httpHeader("x-foo")
     foo: String,
 
-    @httpPrefixHeaders("X-Foo-")
+    @httpPrefixHeaders("x-foo-")
     fooMap: StringMap,
 }
 
 @output
 structure HttpPrefixHeadersOutput {
-    @httpHeader("X-Foo")
+    @httpHeader("x-foo")
     foo: String,
 
-    @httpPrefixHeaders("X-Foo-")
+    @httpPrefixHeaders("x-foo-")
     fooMap: StringMap,
 }
 
@@ -112,13 +129,13 @@ apply HttpPrefixHeadersInResponse @httpResponseTests([
         protocol: restJson1,
         code: 200,
         headers: {
-            "X-Foo": "Foo",
-            "Hello": "Hello"
+            "x-foo": "Foo",
+            "hello": "Hello"
         },
         params: {
             prefixHeaders: {
-                "X-Foo": "Foo",
-                "Hello": "Hello"
+                "x-foo": "Foo",
+                "hello": "Hello"
             }
         }
     },
@@ -132,3 +149,105 @@ structure HttpPrefixHeadersInResponseOutput {
     @httpPrefixHeaders("")
     prefixHeaders: StringMap,
 }
+
+/// Clients that perform this test extract all headers from the response.
+@readonly
+@http(uri: "/HttpEmptyPrefixHeaders", method: "GET")
+operation HttpEmptyPrefixHeaders  {
+    input := {
+        @httpPrefixHeaders("")
+        prefixHeaders: StringMap
+
+        @httpHeader("hello")
+        specificHeader: String
+    }
+    output := {
+        @httpPrefixHeaders("")
+        prefixHeaders: StringMap
+
+        @httpHeader("hello")
+        specificHeader: String
+    }
+}
+
+apply HttpEmptyPrefixHeaders @httpRequestTests([
+    {
+        id: "RestJsonHttpEmptyPrefixHeadersRequestClient"
+        documentation: "Serializes all request headers, using specific when present"
+        protocol: restJson1
+        method: "GET"
+        uri: "/HttpEmptyPrefixHeaders"
+        body: ""
+        headers: {
+            "x-foo": "Foo",
+            "hello": "There"
+        }
+        params: {
+            prefixHeaders: {
+                "x-foo": "Foo",
+                "hello": "Hello"
+            }
+            specificHeader: "There"
+        }
+        appliesTo: "client"
+    }
+    {
+        id: "RestJsonHttpEmptyPrefixHeadersRequestServer"
+        documentation: "Deserializes all request headers with the same for prefix and specific"
+        protocol: restJson1
+        method: "GET"
+        uri: "/HttpEmptyPrefixHeaders"
+        body: ""
+        headers: {
+            "x-foo": "Foo",
+            "hello": "There"
+        }
+        params: {
+            prefixHeaders: {
+                "x-foo": "Foo",
+                "hello": "There"
+            }
+            specificHeader: "There"
+        }
+        appliesTo: "server"
+    }
+])
+
+apply HttpEmptyPrefixHeaders @httpResponseTests([
+    {
+        id: "RestJsonHttpEmptyPrefixHeadersResponseClient"
+        documentation: "Deserializes all response headers with the same for prefix and specific"
+        protocol: restJson1
+        code: 200
+        headers: {
+            "x-foo": "Foo",
+            "hello": "There"
+        }
+        params: {
+            prefixHeaders: {
+                "x-foo": "Foo",
+                "hello": "There"
+            }
+            specificHeader: "There"
+        }
+        appliesTo: "client"
+    }
+    {
+        id: "RestJsonHttpEmptyPrefixHeadersResponseServer"
+        documentation: "Serializes all response headers, using specific when present"
+        protocol: restJson1
+        code: 200
+        headers: {
+            "x-foo": "Foo",
+            "hello": "There"
+        }
+        params: {
+            prefixHeaders: {
+                "x-foo": "Foo",
+                "hello": "Hello"
+            }
+            specificHeader: "There"
+        }
+        appliesTo: "server"
+    }
+])

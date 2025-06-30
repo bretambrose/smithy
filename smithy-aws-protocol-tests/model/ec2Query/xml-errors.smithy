@@ -23,6 +23,7 @@ $version: "2.0"
 namespace aws.protocoltests.ec2
 
 use aws.protocols#ec2Query
+use aws.protocoltests.config#ErrorCodeParams
 use smithy.test#httpResponseTests
 
 /// This operation has three possible return values:
@@ -47,7 +48,7 @@ apply GreetingWithErrors @httpResponseTests([
         body: """
               <GreetingWithErrorsResponse xmlns="https://example.com/">
                   <greeting>Hello</greeting>
-                  <RequestId>requestid</RequestId>
+                  <requestId>requestid</requestId>
               </GreetingWithErrorsResponse>
               """,
         bodyMediaType: "application/xml",
@@ -84,13 +85,17 @@ apply InvalidGreeting @httpResponseTests([
                           <Message>Hi</Message>
                       </Error>
                   </Errors>
-                  <RequestId>foo-id</RequestId>
+                  <RequestID>foo-id</RequestID>
               </Response>
               """,
         bodyMediaType: "application/xml",
         params: {
             Message: "Hi"
         },
+        vendorParamsShape: ErrorCodeParams
+        vendorParams: {
+            code: "InvalidGreeting"
+        }
     }
 ])
 
@@ -128,10 +133,14 @@ apply ComplexError @httpResponseTests([
                           </Nested>
                       </Error>
                   </Errors>
-                  <RequestId>foo-id</RequestId>
+                  <RequestID>foo-id</RequestID>
               </Response>
               """,
         bodyMediaType: "application/xml",
+        vendorParamsShape: ErrorCodeParams
+        vendorParams: {
+            code: "ComplexError"
+        }
     }
 ])
 

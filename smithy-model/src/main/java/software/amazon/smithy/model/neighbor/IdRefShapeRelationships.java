@@ -1,8 +1,7 @@
 /*
- * Copyright 2023 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.neighbor;
 
 import java.util.HashMap;
@@ -44,7 +43,7 @@ final class IdRefShapeRelationships {
     Map<ShapeId, Set<Relationship>> getRelationships() {
         PathFinder finder = PathFinder.create(model);
         for (Shape traitDef : model.getShapesWithTrait(TraitDefinition.class)) {
-            if (traitDef.hasTrait(IdRefTrait.class)) {
+            if (traitDef.hasTrait(IdRefTrait.ID)) {
                 // PathFinder doesn't handle the case where the trait def has the idRef
                 NodeQuery query = new NodeQuery().self();
                 addRelationships(traitDef, query);
@@ -66,12 +65,14 @@ final class IdRefShapeRelationships {
             Trait trait = shape.findTrait(traitDef.getId()).get(); // We already know the shape has the trait.
             Node node = trait.toNode();
             // Invalid shape ids are handled by the idRef trait validator, so ignore them here.
-            query.execute(node).forEach(n -> n.asStringNode()
-                    .flatMap(StringNode::asShapeId)
-                    .flatMap(model::getShape)
-                    .map(referenced -> Relationship.create(shape, RelationshipType.ID_REF, referenced))
-                    .ifPresent(rel -> relationships
-                            .computeIfAbsent(rel.getShape().getId(), id -> new HashSet<>()).add(rel)));
+            query.execute(node)
+                    .forEach(n -> n.asStringNode()
+                            .flatMap(StringNode::asShapeId)
+                            .flatMap(model::getShape)
+                            .map(referenced -> Relationship.create(shape, RelationshipType.ID_REF, referenced))
+                            .ifPresent(rel -> relationships
+                                    .computeIfAbsent(rel.getShape().getId(), id -> new HashSet<>())
+                                    .add(rel)));
         });
     }
 

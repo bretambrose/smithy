@@ -1,23 +1,13 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.node;
 
 import static java.lang.String.format;
 
 import java.io.InputStream;
+import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -153,6 +143,27 @@ public abstract class Node implements FromSourceLocation, ToNode {
      */
     public static String prettyPrintJson(Node node, String indentString) {
         return NodeHandler.prettyPrint(node, indentString);
+    }
+
+    /**
+     * Writes the contents of a pretty-printed Node to the given writer.
+     *
+     * @param node Node to write.
+     * @param writer Writer to write to.
+     */
+    public static void prettyPrintJsonToWriter(Node node, Writer writer) {
+        NodeHandler.prettyPrintToWriter(node, "    ", writer);
+    }
+
+    /**
+     * Writes the contents of a pretty-printed Node to the given writer.
+     *
+     * @param node Node to write.
+     * @param indentString String to use for indention.
+     * @param writer Writer to write to.
+     */
+    public static void prettyPrintJsonToWriter(Node node, String indentString, Writer writer) {
+        NodeHandler.prettyPrintToWriter(node, indentString, writer);
     }
 
     /**
@@ -725,7 +736,8 @@ public abstract class Node implements FromSourceLocation, ToNode {
 
             @Override
             public Node arrayNode(ArrayNode node) {
-                return node.getElements().stream()
+                return node.getElements()
+                        .stream()
                         .map(element -> sortNode(element, keyComparator))
                         .collect(ArrayNode.collect(node.getSourceLocation()));
             }

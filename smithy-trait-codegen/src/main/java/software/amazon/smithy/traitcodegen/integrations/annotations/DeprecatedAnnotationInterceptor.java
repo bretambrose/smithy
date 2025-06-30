@@ -2,7 +2,6 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.traitcodegen.integrations.annotations;
 
 import software.amazon.smithy.model.traits.DeprecatedTrait;
@@ -26,11 +25,11 @@ final class DeprecatedAnnotationInterceptor implements CodeInterceptor.Prepender
     @Override
     public boolean isIntercepted(CodeSection section) {
         if (section instanceof ClassSection) {
-            return ((ClassSection) section).shape().hasTrait(DeprecatedTrait.class);
+            return ((ClassSection) section).shape().hasTrait(DeprecatedTrait.ID);
         } else if (section instanceof GetterSection) {
-            return ((GetterSection) section).shape().hasTrait(DeprecatedTrait.class);
+            return ((GetterSection) section).shape().hasTrait(DeprecatedTrait.ID);
         } else if (section instanceof EnumVariantSection) {
-            return  ((EnumVariantSection) section).memberShape().hasTrait(DeprecatedTrait.class);
+            return ((EnumVariantSection) section).memberShape().hasTrait(DeprecatedTrait.ID);
         }
         return false;
     }

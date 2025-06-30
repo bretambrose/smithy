@@ -2,7 +2,6 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.rulesengine.language.syntax.expressions;
 
 import static software.amazon.smithy.rulesengine.language.error.RuleError.context;
@@ -22,6 +21,7 @@ import software.amazon.smithy.rulesengine.language.error.InnerParseError;
 import software.amazon.smithy.rulesengine.language.evaluation.Scope;
 import software.amazon.smithy.rulesengine.language.evaluation.TypeCheck;
 import software.amazon.smithy.rulesengine.language.evaluation.type.Type;
+import software.amazon.smithy.rulesengine.language.syntax.ToExpression;
 import software.amazon.smithy.utils.SmithyBuilder;
 import software.amazon.smithy.utils.SmithyUnstableApi;
 
@@ -262,7 +262,10 @@ public final class Template implements FromSourceLocation, ToNode {
         }
     }
 
-    private static final class Dynamic implements Part {
+    /**
+     * A dynamic template part.
+     */
+    public static final class Dynamic implements Part, ToExpression {
         private final String raw;
         private final Expression expression;
 
@@ -275,7 +278,8 @@ public final class Template implements FromSourceLocation, ToNode {
             return new Dynamic(value, parseShortform(value, context));
         }
 
-        private Expression getExpression() {
+        @Override
+        public Expression toExpression() {
             return expression;
         }
 

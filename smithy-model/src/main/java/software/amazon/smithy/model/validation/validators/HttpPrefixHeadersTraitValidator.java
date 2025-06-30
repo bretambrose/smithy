@@ -1,18 +1,7 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.validation.validators;
 
 import java.util.ArrayList;
@@ -25,7 +14,9 @@ import software.amazon.smithy.model.shapes.StructureShape;
 import software.amazon.smithy.model.traits.HttpHeaderTrait;
 import software.amazon.smithy.model.traits.HttpPrefixHeadersTrait;
 import software.amazon.smithy.model.validation.AbstractValidator;
+import software.amazon.smithy.model.validation.Severity;
 import software.amazon.smithy.model.validation.ValidationEvent;
+import software.amazon.smithy.utils.StringUtils;
 
 /**
  * Validates that httpHeader traits do not case-insensitively start with an
@@ -52,18 +43,37 @@ public final class HttpPrefixHeadersTraitValidator extends AbstractValidator {
     ) {
         List<ValidationEvent> events = new ArrayList<>();
         String prefix = prefixTrait.getValue().toLowerCase(Locale.ENGLISH);
+        Severity severity = Severity.ERROR;
+        String detail =
+                "`httpHeader` bindings must not case-insensitively start with any `httpPrefixHeaders` bindings.";
+        if (StringUtils.isEmpty(prefix)) {
+            severity = Severity.NOTE;
+            detail = String.format(
+                    "The service will not be able to disambiguate between header parameters intended for the `%s` "
+                            + "member and those explicitly bound to the `httpHeader` members.",
+                    member.getId());
+        }
 
         // Find all structure members that case-insensitively start with the same prefix.
         for (MemberShape otherMember : structure.getAllMembers().values()) {
-            otherMember.getTrait(HttpHeaderTrait.class).ifPresent(httpHeaderTrait -> {
+            if (otherMember.hasTrait(HttpHeaderTrait.ID)) {
+                HttpHeaderTrait httpHeaderTrait = otherMember.expectTrait(HttpHeaderTrait.class);
                 String lowerCaseHeader = httpHeaderTrait.getValue().toLowerCase(Locale.ENGLISH);
+
                 if (lowerCaseHeader.startsWith(prefix)) {
-                    events.add(error(otherMember, httpHeaderTrait, String.format(
-                            "`httpHeader` binding of `%s` conflicts with the `httpPrefixHeaders` binding of `%s` "
-                            + "to `%s`. `httpHeader` bindings must not case-insensitively start with any "
-                            + "`httpPrefixHeaders` bindings.", lowerCaseHeader, member.getId(), prefix)));
+                    events.add(createEvent(
+                            severity,
+                            otherMember,
+                            httpHeaderTrait,
+                            String.format(
+                                    "`httpHeader` binding of `%s` conflicts with the `httpPrefixHeaders` binding of `%s` "
+                                            + "to `%s`. %s",
+                                    lowerCaseHeader,
+                                    member.getId(),
+                                    prefix,
+                                    detail)));
                 }
-            });
+            }
         }
 
         return events;

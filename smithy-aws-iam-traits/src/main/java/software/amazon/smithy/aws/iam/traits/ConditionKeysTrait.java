@@ -1,25 +1,17 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.aws.iam.traits;
 
+import java.util.ArrayList;
 import java.util.List;
 import software.amazon.smithy.model.FromSourceLocation;
 import software.amazon.smithy.model.SourceLocation;
+import software.amazon.smithy.model.shapes.ServiceShape;
 import software.amazon.smithy.model.shapes.ShapeId;
 import software.amazon.smithy.model.traits.StringListTrait;
+import software.amazon.smithy.utils.ListUtils;
 import software.amazon.smithy.utils.ToSmithyBuilder;
 
 /**
@@ -27,6 +19,7 @@ import software.amazon.smithy.utils.ToSmithyBuilder;
  */
 public final class ConditionKeysTrait extends StringListTrait implements ToSmithyBuilder<ConditionKeysTrait> {
     public static final ShapeId ID = ShapeId.from("aws.iam#conditionKeys");
+    private List<String> resolvedConditionKeys;
 
     public ConditionKeysTrait(List<String> keys, FromSourceLocation sourceLocation) {
         super(ID, keys, sourceLocation);
@@ -38,6 +31,23 @@ public final class ConditionKeysTrait extends StringListTrait implements ToSmith
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    /**
+     * Gets the fully resolved condition key names based on the service's ARN namespace.
+     *
+     * @param service The service to resolve no-prefix condition key names to.
+     * @return the resolved condition key names.
+     */
+    public List<String> resolveConditionKeys(ServiceShape service) {
+        if (resolvedConditionKeys == null) {
+            List<String> keys = new ArrayList<>();
+            for (String value : getValues()) {
+                keys.add(ConditionKeysIndex.resolveFullConditionKey(service, value));
+            }
+            resolvedConditionKeys = ListUtils.copyOf(keys);
+        }
+        return resolvedConditionKeys;
     }
 
     public static final class Provider extends StringListTrait.Provider<ConditionKeysTrait> {

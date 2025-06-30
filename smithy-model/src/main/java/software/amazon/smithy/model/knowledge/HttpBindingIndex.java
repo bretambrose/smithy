@@ -1,18 +1,7 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.knowledge;
 
 import java.lang.ref.WeakReference;
@@ -90,12 +79,12 @@ public final class HttpBindingIndex implements KnowledgeIndex {
      *  payload, prefix headers, query string, or label.
      */
     public static boolean hasHttpRequestBindings(Shape shape) {
-        return shape.hasTrait(HttpHeaderTrait.class)
-                || shape.hasTrait(HttpPrefixHeadersTrait.class)
-                || shape.hasTrait(HttpPayloadTrait.class)
-                || shape.hasTrait(HttpQueryTrait.class)
-                || shape.hasTrait(HttpQueryParamsTrait.class)
-                || shape.hasTrait(HttpLabelTrait.class);
+        return shape.hasTrait(HttpHeaderTrait.ID)
+                || shape.hasTrait(HttpPrefixHeadersTrait.ID)
+                || shape.hasTrait(HttpPayloadTrait.ID)
+                || shape.hasTrait(HttpQueryTrait.ID)
+                || shape.hasTrait(HttpQueryParamsTrait.ID)
+                || shape.hasTrait(HttpLabelTrait.ID);
     }
 
     /**
@@ -106,10 +95,10 @@ public final class HttpBindingIndex implements KnowledgeIndex {
      *  payload, of prefix headers.
      */
     public static boolean hasHttpResponseBindings(Shape shape) {
-        return shape.hasTrait(HttpHeaderTrait.class)
-                || shape.hasTrait(HttpPrefixHeadersTrait.class)
-                || shape.hasTrait(HttpPayloadTrait.class)
-                || shape.hasTrait(HttpResponseCodeTrait.class);
+        return shape.hasTrait(HttpHeaderTrait.ID)
+                || shape.hasTrait(HttpPrefixHeadersTrait.ID)
+                || shape.hasTrait(HttpPayloadTrait.ID)
+                || shape.hasTrait(HttpResponseCodeTrait.ID);
     }
 
     private HttpTrait getHttpTrait(ToShapeId operation) {
@@ -140,9 +129,9 @@ public final class HttpBindingIndex implements KnowledgeIndex {
 
         if (shape.isOperationShape()) {
             return getHttpTrait(id).getCode();
-        } else if (shape.getTrait(HttpErrorTrait.class).isPresent()) {
+        } else if (shape.hasTrait(HttpErrorTrait.ID)) {
             return shape.getTrait(HttpErrorTrait.class).get().getCode();
-        } else if (shape.getTrait(ErrorTrait.class).isPresent()) {
+        } else if (shape.hasTrait(ErrorTrait.ID)) {
             return shape.getTrait(ErrorTrait.class).get().getDefaultHttpStatusCode();
         }
 
@@ -369,11 +358,13 @@ public final class HttpBindingIndex implements KnowledgeIndex {
                     break;
                 } else if (StreamingTrait.isEventStream(target)) {
                     return eventStreamContentType;
-                } else if (target.isDocumentShape() || target.isStructureShape() || target.isUnionShape()
-                        || target.isListShape() || target.isMapShape()) {
+                } else if (target.isDocumentShape() || target.isStructureShape()
+                        || target.isUnionShape()
+                        || target.isListShape()
+                        || target.isMapShape()) {
                     // Document type and structure targets are always the document content-type.
                     return documentContentType;
-                } else if (target.getTrait(MediaTypeTrait.class).isPresent()) {
+                } else if (target.hasTrait(MediaTypeTrait.ID)) {
                     // Use the @mediaType trait if available.
                     return target.getTrait(MediaTypeTrait.class).get().getValue();
                 } else if (target.isBlobShape()) {
@@ -431,29 +422,32 @@ public final class HttpBindingIndex implements KnowledgeIndex {
         boolean foundPayload = false;
 
         for (MemberShape member : struct.getAllMembers().values()) {
-            if (member.getTrait(HttpHeaderTrait.class).isPresent()) {
-                HttpHeaderTrait trait = member.getTrait(HttpHeaderTrait.class).get();
+            if (member.hasTrait(HttpHeaderTrait.ID)) {
+                HttpHeaderTrait trait = member.expectTrait(HttpHeaderTrait.class);
                 bindings.add(new HttpBinding(member, HttpBinding.Location.HEADER, trait.getValue(), trait));
-            } else if (member.getTrait(HttpPrefixHeadersTrait.class).isPresent()) {
-                HttpPrefixHeadersTrait trait = member.getTrait(HttpPrefixHeadersTrait.class).get();
+            } else if (member.hasTrait(HttpPrefixHeadersTrait.ID)) {
+                HttpPrefixHeadersTrait trait = member.expectTrait(HttpPrefixHeadersTrait.class);
                 bindings.add(new HttpBinding(member, HttpBinding.Location.PREFIX_HEADERS, trait.getValue(), trait));
-            } else if (isRequest && member.getTrait(HttpQueryTrait.class).isPresent()) {
-                HttpQueryTrait trait = member.getTrait(HttpQueryTrait.class).get();
+            } else if (isRequest && member.hasTrait(HttpQueryTrait.ID)) {
+                HttpQueryTrait trait = member.expectTrait(HttpQueryTrait.class);
                 bindings.add(new HttpBinding(member, HttpBinding.Location.QUERY, trait.getValue(), trait));
-            } else if (isRequest && member.getTrait(HttpQueryParamsTrait.class).isPresent()) {
-                HttpQueryParamsTrait trait = member.getTrait(HttpQueryParamsTrait.class).get();
+            } else if (isRequest && member.hasTrait(HttpQueryParamsTrait.ID)) {
+                HttpQueryParamsTrait trait = member.expectTrait(HttpQueryParamsTrait.class);
                 bindings.add(new HttpBinding(member, HttpBinding.Location.QUERY_PARAMS, member.getMemberName(), trait));
-            } else if (member.getTrait(HttpPayloadTrait.class).isPresent()) {
+            } else if (member.hasTrait(HttpPayloadTrait.ID)) {
                 foundPayload = true;
-                HttpPayloadTrait trait = member.getTrait(HttpPayloadTrait.class).get();
+                HttpPayloadTrait trait = member.expectTrait(HttpPayloadTrait.class);
                 bindings.add(new HttpBinding(member, HttpBinding.Location.PAYLOAD, member.getMemberName(), trait));
-            } else if (isRequest && member.getTrait(HttpLabelTrait.class).isPresent()) {
-                HttpLabelTrait trait = member.getTrait(HttpLabelTrait.class).get();
+            } else if (isRequest && member.hasTrait(HttpLabelTrait.ID)) {
+                HttpLabelTrait trait = member.expectTrait(HttpLabelTrait.class);
                 bindings.add(new HttpBinding(member, HttpBinding.Location.LABEL, member.getMemberName(), trait));
-            } else if (!isRequest && member.getTrait(HttpResponseCodeTrait.class).isPresent()) {
-                HttpResponseCodeTrait trait = member.getTrait(HttpResponseCodeTrait.class).get();
+            } else if (!isRequest && member.hasTrait(HttpResponseCodeTrait.ID)) {
+                HttpResponseCodeTrait trait = member.expectTrait(HttpResponseCodeTrait.class);
                 bindings.add(new HttpBinding(
-                        member, HttpBinding.Location.RESPONSE_CODE, member.getMemberName(), trait));
+                        member,
+                        HttpBinding.Location.RESPONSE_CODE,
+                        member.getMemberName(),
+                        trait));
             } else {
                 unbound.add(member);
             }

@@ -2,7 +2,6 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.traitcodegen.integrations.javadoc;
 
 import software.amazon.smithy.model.traits.SinceTrait;
@@ -31,6 +30,6 @@ final class SinceInterceptor implements CodeInterceptor.Appender<JavaDocSection,
 
     @Override
     public boolean isIntercepted(JavaDocSection section) {
-        return section.shape().hasTrait(SinceTrait.class);
+        return section.shape().hasTrait(SinceTrait.ID);
     }
 }

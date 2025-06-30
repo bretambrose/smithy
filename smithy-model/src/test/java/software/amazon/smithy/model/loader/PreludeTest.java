@@ -1,18 +1,7 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.loader;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -57,7 +46,7 @@ public class PreludeTest {
         ModelTransformer transformer = ModelTransformer.create();
         Model result = transformer.scrubTraitDefinitions(model);
         Set<ShapeId> unreferencedPrivateShapes = result.shapes()
-                .filter(shape -> shape.hasTrait(PrivateTrait.class))
+                .filter(shape -> shape.hasTrait(PrivateTrait.ID))
                 .map(Shape::getId)
                 .collect(Collectors.toSet());
 
@@ -87,13 +76,13 @@ public class PreludeTest {
     public void preludeShapesAreAlwaysBoxed() {
         Model model = Model.assembler().assemble().unwrap();
 
-        assertThat(model.expectShape(ShapeId.from("smithy.api#Boolean")).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(ShapeId.from("smithy.api#Byte")).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(ShapeId.from("smithy.api#Short")).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(ShapeId.from("smithy.api#Integer")).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(ShapeId.from("smithy.api#Long")).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(ShapeId.from("smithy.api#Float")).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(ShapeId.from("smithy.api#Double")).hasTrait(BoxTrait.class), is(true));
-        assertThat(model.expectShape(ShapeId.from("smithy.api#PrimitiveBoolean")).hasTrait(BoxTrait.class), is(false));
+        assertThat(model.expectShape(ShapeId.from("smithy.api#Boolean")).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(ShapeId.from("smithy.api#Byte")).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(ShapeId.from("smithy.api#Short")).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(ShapeId.from("smithy.api#Integer")).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(ShapeId.from("smithy.api#Long")).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(ShapeId.from("smithy.api#Float")).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(ShapeId.from("smithy.api#Double")).hasTrait(BoxTrait.ID), is(true));
+        assertThat(model.expectShape(ShapeId.from("smithy.api#PrimitiveBoolean")).hasTrait(BoxTrait.ID), is(false));
     }
 }

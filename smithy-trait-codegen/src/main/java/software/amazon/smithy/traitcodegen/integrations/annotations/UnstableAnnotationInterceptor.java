@@ -2,7 +2,6 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.traitcodegen.integrations.annotations;
 
 import software.amazon.smithy.model.traits.UnstableTrait;
@@ -27,11 +26,11 @@ final class UnstableAnnotationInterceptor implements CodeInterceptor.Prepender<C
     @Override
     public boolean isIntercepted(CodeSection section) {
         if (section instanceof ClassSection) {
-            return ((ClassSection) section).shape().hasTrait(UnstableTrait.class);
+            return ((ClassSection) section).shape().hasTrait(UnstableTrait.ID);
         } else if (section instanceof GetterSection) {
-            return ((GetterSection) section).shape().hasTrait(UnstableTrait.class);
+            return ((GetterSection) section).shape().hasTrait(UnstableTrait.ID);
         } else if (section instanceof EnumVariantSection) {
-            return  ((EnumVariantSection) section).memberShape().hasTrait(UnstableTrait.class);
+            return ((EnumVariantSection) section).memberShape().hasTrait(UnstableTrait.ID);
         }
         return false;
     }

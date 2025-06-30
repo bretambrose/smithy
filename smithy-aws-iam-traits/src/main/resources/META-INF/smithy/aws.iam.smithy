@@ -16,19 +16,20 @@ string actionPermissionDescription
 /// Applies condition keys by name to a resource or operation.
 @trait(selector: ":test(resource, operation)")
 list conditionKeys {
-    member: IamIdentifier
+    member: ConditionKeyName
 }
 
 /// Uses the associated member’s value as this condition key’s value.
 /// Needed when the member name doesn't match the condition key name.
 @trait(selector: "member")
+@pattern("^(([A-Za-z0-9][A-Za-z0-9-\\.]{0,62}:)?[^:\\s]+)$")
 string conditionKeyValue
 
 /// Defines the set of condition keys that appear within a service in addition to
 /// inferred and global condition keys.
 @trait(selector: "service")
 map defineConditionKeys {
-    key: IamIdentifier
+    key: ConditionKeyName
     value: ConditionKeyDefinition
 }
 
@@ -85,7 +86,7 @@ list requiredActions {
 /// as opposed to being pulled from the request.
 @trait(selector: "service")
 list serviceResolvedConditionKeys {
-    member: IamIdentifier
+    member: ConditionKeyName
 }
 
 /// The principal types that can use the service or operation.
@@ -119,6 +120,10 @@ structure ConditionKeyDefinition {
     /// A relative URL path that defines more information about the condition key
     /// within a set of IAM-related documentation.
     relativeDocumentation: String
+
+    /// Whether a service resolved condition key is required.
+    /// Request resolved condition keys MUST use the @required trait.
+    required: Boolean
 }
 
 /// Contains information about a resource an IAM action can be authorized against.
@@ -151,6 +156,10 @@ list RequiredActionsList {
 list ResourceNameList {
     member: ResourceName
 }
+
+@private
+@pattern("^(([A-Za-z0-9][A-Za-z0-9-\\.]{0,62}:)?[^:\\s]+)$")
+string ConditionKeyName
 
 /// The IAM policy type of the value that will supplied for this context key
 @private

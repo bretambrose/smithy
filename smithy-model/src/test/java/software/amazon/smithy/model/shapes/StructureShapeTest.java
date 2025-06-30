@@ -1,18 +1,7 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.shapes;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -55,7 +44,7 @@ public class StructureShapeTest {
                 .build();
 
         assertEquals(shape.getMember("foo").get(),
-                     MemberShape.builder().id(shape.getId().withMember("foo")).target("ns.foo#bam").build());
+                MemberShape.builder().id(shape.getId().withMember("foo")).target("ns.foo#bam").build());
     }
 
     @Test
@@ -66,11 +55,11 @@ public class StructureShapeTest {
                 .build();
 
         assertEquals(shape.getMember("foo").get(),
-                     MemberShape.builder()
-                             .id(shape.getId().withMember("foo"))
-                             .target("ns.foo#bam")
-                             .addTrait(new SensitiveTrait())
-                             .build());
+                MemberShape.builder()
+                        .id(shape.getId().withMember("foo"))
+                        .target("ns.foo#bam")
+                        .addTrait(new SensitiveTrait())
+                        .build());
     }
 
     @Test
@@ -144,9 +133,9 @@ public class StructureShapeTest {
                 .addTrait(new DocumentationTrait("hi"))
                 .build();
 
-        assertTrue(concrete.hasTrait(SensitiveTrait.class));
-        assertTrue(concrete.hasTrait(DeprecatedTrait.class));
-        assertTrue(concrete.hasTrait(DocumentationTrait.class));
+        assertTrue(concrete.hasTrait(SensitiveTrait.ID));
+        assertTrue(concrete.hasTrait(DeprecatedTrait.ID));
+        assertTrue(concrete.hasTrait(DocumentationTrait.ID));
     }
 
     @Test
@@ -197,13 +186,15 @@ public class StructureShapeTest {
         // then convert it to a builder to update it, then build it. Then the
         // member is added to a new container shape and rebuilt. The workflow
         // is exactly the same as a normal structure with no mixin members.
-        MemberShape updatedA = concrete.getMember("a").get().toBuilder()
+        MemberShape updatedA = concrete.getMember("a")
+                .get()
+                .toBuilder()
                 .addTrait(new SensitiveTrait())
                 .build();
         StructureShape updated = concrete.toBuilder().addMember(updatedA).build();
 
         assertThat(updated.getMemberNames(), contains("a"));
-        assertTrue(updated.getMember("a").get().hasTrait(SensitiveTrait.class));
+        assertTrue(updated.getMember("a").get().hasTrait(SensitiveTrait.ID));
         assertThat(updated.getMember("a").get().getMixins(), contains(mixin1.getMember("a").get().getId()));
     }
 
@@ -227,10 +218,10 @@ public class StructureShapeTest {
                 .addMixin(mixin1)
                 .build();
 
-        assertTrue(concrete.getMember("a").get().hasTrait(SensitiveTrait.class));
+        assertTrue(concrete.getMember("a").get().hasTrait(SensitiveTrait.ID));
         assertThat(concrete.getMember("a").get().getMixins(), contains(mixin1.getMember("a").get().getId()));
 
-        assertTrue(concrete.getMember("b").get().hasTrait(SensitiveTrait.class));
+        assertTrue(concrete.getMember("b").get().hasTrait(SensitiveTrait.ID));
         assertThat(concrete.getMember("b").get().getMixins(), contains(mixin1.getMember("b").get().getId()));
     }
 
@@ -331,9 +322,9 @@ public class StructureShapeTest {
                 .addMixin(mixin2)
                 .build();
 
-        assertThat(concrete.getMember("a").get().getMixins(), contains(
-                ShapeId.from("smithy.example#Mixin1$a"),
-                ShapeId.from("smithy.example#Mixin2$a")
-        ));
+        assertThat(concrete.getMember("a").get().getMixins(),
+                contains(
+                        ShapeId.from("smithy.example#Mixin1$a"),
+                        ShapeId.from("smithy.example#Mixin2$a")));
     }
 }

@@ -124,6 +124,13 @@ The following is an example ``smithy-build.json`` configuration:
         }
     }
 
+.. note::
+
+    The ``smithy-build.json`` file supports comments using ``//`` syntax. Any
+    content between two consecutive ``/`` characters and a new line (``\n``) or
+    the end of the file is considered a comment and ignored when parsing.
+
+
 .. _plugin-id:
 
 Plugin ID and artifact names
@@ -565,6 +572,31 @@ applied.
     The :ref:`enum trait <enum-trait>` is deprecated. It is recommended to
     use an :ref:`enum shape <enum>` instead to avoid needing to use this
     transform.
+
+.. _makeIdempotencyTokensClientOptional:
+
+makeIdempotencyTokensClientOptional
+-----------------------------------
+
+Makes required :ref:`@idempotencyToken <idempotencyToken-trait>` members :ref:`@clientOptional <clientOptional-trait>`.
+
+Idempotency tokens that are required should fail validation, but shouldn't be required to create a type.
+This allows a default value to get injected when missing.
+
+.. code-block:: json
+
+    {
+        "version": "1.0",
+        "projections": {
+            "exampleProjection": {
+                "transforms": [
+                    {
+                        "name": "makeIdempotencyTokensClientOptional"
+                    }
+                ]
+            }
+        }
+    }
 
 .. _changeTypes:
 
@@ -1486,6 +1518,28 @@ key is not in the provided ``keys`` list.
         }
     }
 
+.. _flattenAndRemoveMixins:
+
+flattenAndRemoveMixins
+----------------------
+
+Flattens :ref:`mixins <Mixins>` out of the model and into their local shapes.
+
+.. code-block:: json
+
+    {
+        "version": "1.0",
+        "projections": {
+            "exampleProjection": {
+                "transforms": [
+                    {
+                        "name": "flattenAndRemoveMixins"
+                    }
+                ]
+            }
+        }
+    }
+
 .. _flattenNamespaces:
 
 flattenNamespaces
@@ -1636,6 +1690,61 @@ but keeps the shape if it has any of the provided tags:
                                 "export-tag1",
                                 "another-export-tag"
                             ]
+                        }
+                    }
+                ]
+            }
+        }
+    }
+
+.. _removeDeprecatedShapes-transform:
+
+removeDeprecatedShapes
+-----------------------
+
+Removes any shapes that were marked as ``@deprecated`` before the specified version or date.
+
+This transform can be used to filter out shapes with the :ref:`deprecated trait <deprecated-trait>` applied if the
+``since`` property of the trait specifies a version or date. Versions are expected to follow the
+`SemVer Specification`_ and dates are expected to be `ISO 8601`_ calendar dates (YYYY-MM-DD).
+If the value of the ``since`` property is not a valid SemVer version or ISO 8601 calendar date then the
+``@deprecated`` trait will be ignored by this transform.
+
+If the version or date in the ``since`` property of a ``@deprecated`` trait is before the configured version or date, then
+the shape the ``@deprecated`` trait is applied to will be removed from the model. Shapes with the ``@deprecated`` trait,
+but no ``since`` property will be ignored by this transform.
+
+.. list-table::
+    :header-rows: 1
+    :widths: 10 20 70
+
+    * - Property
+      - Type
+      - Description
+    * - relativeDate
+      - ``string``
+      - Date, in `ISO 8601`_ calendar date format (YYYY-MM-DD), to use to filter out deprecated shapes.
+        Any shapes deprecated before this date will be removed from the model.
+    * - relativeVersion
+      - ``string``
+      - Version, following the `SemVer Specification`_, to use to filter out deprecated shapes.
+        Any shapes deprecated in an earlier version will be removed from the model.
+
+The following example removes any deprecated shapes that were deprecated before ``2024-10-10``
+or before version ``1.1.0``.
+
+.. code-block:: json
+
+    {
+        "version": "1.0",
+        "projections": {
+            "exampleProjection": {
+                "transforms": [
+                    {
+                        "name": "removeDeprecatedShapes",
+                        "args": {
+                            "relativeDate": "2024-10-10",
+                            "relativeVersion": "1.1.0"
                         }
                     }
                 ]
@@ -1957,3 +2066,5 @@ Assuming ``hello.sh`` is on the PATH and might look something like:
 .. _Apache Maven: https://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html
 .. _Maven Central: https://search.maven.org
 .. _official Maven documentation: https://maven.apache.org/pom.html#dependency-version-requirement-specification
+.. _SemVer Specification: https://semver.org/
+.. _ISO 8601: https://www.iso.org/iso-8601-date-and-time-format.html

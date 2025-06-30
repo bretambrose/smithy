@@ -48,6 +48,7 @@ service RestXml {
 
         // @httpPrefixHeaders tests
         HttpPrefixHeaders,
+        HttpEmptyPrefixHeaders,
 
         // @httpPayload tests
         HttpPayloadTraits,
@@ -83,6 +84,7 @@ service RestXml {
         XmlMaps,
         XmlMapsXmlName,
         NestedXmlMaps,
+        NestedXmlMapWithXmlName,
         FlattenedXmlMap,
         FlattenedXmlMapWithXmlName,
         FlattenedXmlMapWithXmlNamespace,
@@ -105,6 +107,9 @@ service RestXml {
         FractionalSeconds,
 
         // requestCompression trait tests
-        PutWithContentEncoding
+        PutWithContentEncoding,
+
+        // Content-Type header tests
+        ContentTypeParameters,
     ]
 }

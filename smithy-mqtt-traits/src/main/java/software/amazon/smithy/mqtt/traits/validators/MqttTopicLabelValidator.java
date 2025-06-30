@@ -1,18 +1,7 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.mqtt.traits.validators;
 
 import java.util.ArrayList;
@@ -62,11 +51,11 @@ public class MqttTopicLabelValidator extends AbstractValidator {
     }
 
     private static TopicCollection createTopics(OperationShape shape) {
-        if (shape.hasTrait(SubscribeTrait.class)) {
+        if (shape.hasTrait(SubscribeTrait.ID)) {
             SubscribeTrait trait = shape.expectTrait(SubscribeTrait.class);
             List<Topic> bindings = Collections.singletonList(trait.getTopic());
             return new TopicCollection(shape, trait, bindings);
-        } else if (shape.hasTrait(PublishTrait.class)) {
+        } else if (shape.hasTrait(PublishTrait.ID)) {
             PublishTrait trait = shape.expectTrait(PublishTrait.class);
             List<Topic> bindings = Collections.singletonList(trait.getTopic());
             return new TopicCollection(shape, trait, bindings);
@@ -81,26 +70,30 @@ public class MqttTopicLabelValidator extends AbstractValidator {
         List<ValidationEvent> events = new ArrayList<>();
 
         for (MemberShape member : input.getAllMembers().values()) {
-            if (member.hasTrait(TopicLabelTrait.class)) {
+            if (member.hasTrait(TopicLabelTrait.ID)) {
                 if (labels.contains(member.getMemberName())) {
                     labels.remove(member.getMemberName());
                 } else {
-                    events.add(error(member, member.expectTrait(TopicLabelTrait.class), String.format(
-                            "This member is marked with the `smithy.mqtt#topicLabel` trait, but when this member is "
-                            + "used as part of the input of the `%s` operation, a corresponding label cannot be "
-                            + "found in the `%s` trait",
-                            topics.operation.getId(),
-                            Trait.getIdiomaticTraitName(topics.trait.toShapeId()))));
+                    events.add(error(member,
+                            member.expectTrait(TopicLabelTrait.class),
+                            String.format(
+                                    "This member is marked with the `smithy.mqtt#topicLabel` trait, but when this member is "
+                                            + "used as part of the input of the `%s` operation, a corresponding label cannot be "
+                                            + "found in the `%s` trait",
+                                    topics.operation.getId(),
+                                    Trait.getIdiomaticTraitName(topics.trait.toShapeId()))));
                 }
             }
         }
 
         if (!labels.isEmpty()) {
-            events.add(error(topics.operation, topics.trait, String.format(
-                    "The `%s` trait contains the following topic labels that could not be found in the input "
-                    + "structure of the operation or were not marked with the `smithy.mqtt#topicLabel` trait: [%s]",
-                    Trait.getIdiomaticTraitName(topics.trait.toShapeId()),
-                    ValidationUtils.tickedList(labels))));
+            events.add(error(topics.operation,
+                    topics.trait,
+                    String.format(
+                            "The `%s` trait contains the following topic labels that could not be found in the input "
+                                    + "structure of the operation or were not marked with the `smithy.mqtt#topicLabel` trait: [%s]",
+                            Trait.getIdiomaticTraitName(topics.trait.toShapeId()),
+                            ValidationUtils.tickedList(labels))));
         }
 
         return events;

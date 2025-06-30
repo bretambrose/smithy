@@ -2,7 +2,6 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.rulesengine.language.syntax.expressions.functions;
 
 import java.net.MalformedURLException;
@@ -30,7 +29,7 @@ public final class ParseUrl extends LibraryFunction {
     public static final Identifier PATH = Identifier.of("path");
     public static final Identifier NORMALIZED_PATH = Identifier.of("normalizedPath");
     public static final Identifier IS_IP = Identifier.of("isIp");
-    private static final Definition DEFINITION = new Definition();
+    public static final Definition DEFINITION = new Definition();
 
     private ParseUrl(FunctionNode functionNode) {
         super(DEFINITION, functionNode);
@@ -100,41 +99,9 @@ public final class ParseUrl extends LibraryFunction {
                     return Value.emptyValue();
                 }
 
-                boolean isIpAddr = false;
-                String host = parsed.getHost();
-                if (host.startsWith("[") && host.endsWith("]")) {
-                    isIpAddr = true;
-                }
-                String[] dottedParts = host.split("\\.");
-                if (dottedParts.length == 4) {
-                    isIpAddr = true;
-                    for (String dottedPart : dottedParts) {
-                        try {
-                            int value = Integer.parseInt(dottedPart);
-                            if (value < 0 || value > 255) {
-                                isIpAddr = false;
-                            }
-                        } catch (NumberFormatException ex) {
-                            isIpAddr = false;
-                        }
-                    }
-                }
-
+                boolean isIpAddr = isIpAddr(parsed.getHost());
                 String path = parsed.getPath();
-                String normalizedPath;
-                if (StringUtils.isBlank(path)) {
-                    normalizedPath = "/";
-                } else {
-                    StringBuilder builder = new StringBuilder();
-                    if (!path.startsWith("/")) {
-                        builder.append("/");
-                    }
-                    builder.append(path);
-                    if (!path.endsWith("/")) {
-                        builder.append("/");
-                    }
-                    normalizedPath = builder.toString();
-                }
+                String normalizedPath = normalizePath(path);
 
                 Map<Identifier, Value> values = new LinkedHashMap<>();
                 values.put(SCHEME, Value.stringValue(parsed.getProtocol()));
@@ -151,6 +118,93 @@ public final class ParseUrl extends LibraryFunction {
         @Override
         public ParseUrl createFunction(FunctionNode functionNode) {
             return new ParseUrl(functionNode);
+        }
+    }
+
+    /**
+     * Checks if a host is an IP address for use with endpoint rules.
+     *
+     * @param host Host to check.
+     * @return true if it is an IP address.
+     */
+    public static boolean isIpAddr(String host) {
+        if (host == null || host.length() < 2) {
+            return false;
+        }
+
+        // Simple check for IPv6 (enclosed in square brackets)
+        if (host.charAt(0) == '[' && host.charAt(host.length() - 1) == ']') {
+            return true;
+        }
+
+        int from = 0;
+        int segments = 0;
+        boolean done = false;
+        while (!done) {
+            int index = host.indexOf('.', from);
+            if (index == -1) {
+                if (segments != 3) {
+                    // E.g., 123.com
+                    return false;
+                }
+                index = host.length();
+                done = true;
+            } else if (segments == 3) {
+                // E.g., 1.2.3.4.5
+                return false;
+            }
+            int length = index - from;
+            if (length == 1) {
+                char ch0 = host.charAt(from);
+                if (ch0 < '0' || ch0 > '9') {
+                    return false;
+                }
+            } else if (length == 2) {
+                char ch0 = host.charAt(from);
+                char ch1 = host.charAt(from + 1);
+                if ((ch0 <= '0' || ch0 > '9') || (ch1 < '0' || ch1 > '9')) {
+                    return false;
+                }
+            } else if (length == 3) {
+                char ch0 = host.charAt(from);
+                char ch1 = host.charAt(from + 1);
+                char ch2 = host.charAt(from + 2);
+                if ((ch0 <= '0' || ch0 > '9')
+                        || (ch1 < '0' || ch1 > '9')
+                        || (ch2 < '0' || ch2 > '9')) {
+                    return false;
+                }
+                // This is a heuristic; We are intentionally not checking for the range 000-255.
+            } else {
+                return false;
+            }
+            from = index + 1;
+            segments += 1;
+        }
+        return true;
+    }
+
+    /**
+     * Normalizes a path string according to the ParseURL function.
+     *
+     * @param path Path string to normalize.
+     * @return the normalized path.
+     */
+    public static String normalizePath(String path) {
+        if (StringUtils.isBlank(path)) {
+            return "/";
+        } else {
+            boolean startsWithSlash = path.startsWith("/");
+            boolean endsWithSlash = path.endsWith("/");
+            if (startsWithSlash && endsWithSlash) {
+                return path;
+            } else if (startsWithSlash) {
+                return path + "/";
+            } else if (endsWithSlash) {
+                return "/" + path;
+            } else {
+                return "/" + path + "/";
+            }
         }
     }
 }

@@ -53,6 +53,8 @@ list they understand when connecting to a service. A client SHOULD assume
 that a service supports ``http/1.1`` when no ``http`` or ``eventStreamHttp``
 values are provided.
 
+Event streaming uses the :ref:`amazon-eventstream` format.
+
 The following example defines a service that uses
 ``smithy.protocols#rpcv2Cbor``.
 
@@ -214,8 +216,14 @@ Buffered RPC requests for the ``rpcv2Cbor`` protocol SHOULD include a
 ``Content-Length`` header. Event streaming requests MUST NOT specify a content
 length (instead using ``Transfer-Encoding: chunked`` on HTTP/1.1).
 
-Event streaming requests for the ``rpcv2Cbor`` protocol MUST include an
-``Accept`` header set to the value ``application/vnd.amazon.eventstream``.
+Requests for the ``rpcv2Cbor`` protocol MUST use the following behavior for
+setting an ``Accept`` header:
+
+* For requests with event streaming responses: the value of the ``Accept``
+    header MUST be ``application/vnd.amazon.eventstream``.
+* For requests with all other response types: the value of the ``Accept``
+    header MUST be ``application/cbor``.
+
 Other forms of content streaming MAY be added in the future, utilizing
 different values for ``Accept``.
 
@@ -238,11 +246,12 @@ headers for requests:
         is ``application/vnd.amazon.eventstream``.
     * - ``Content-Length``
       - Conditional
-      - The standard ``Content-Length`` header defined by :rfc:`7230#section-3.3.2`.
+      - The standard ``Content-Length`` header defined by :rfc:`9110#section-8.6`.
         For event streaming requests, this MUST NOT be set.
     * - ``Accept``
-      - Conditional
-      - For event streaming requests, to the value ``application/vnd.amazon.eventstream``.
+      - Required
+      - The value of ``application/cbor``. For requests with event streaming
+        responses, this is ``application/vnd.amazon.eventstream``.
 
 
 ~~~~~~~~~
@@ -303,7 +312,7 @@ headers for responses:
         is ``application/vnd.amazon.eventstream``.
     * - ``Content-Length``
       - Conditional
-      - The standard ``Content-Length`` header defined by :rfc:`7230#section-3.3.2`.
+      - The standard ``Content-Length`` header defined by :rfc:`9110#section-8.6`.
         For event streaming requests, this SHOULD NOT be set.
 
 

@@ -1,18 +1,7 @@
 /*
- * Copyright 2022 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.codegen.core.directed;
 
 import java.util.ArrayList;
@@ -177,8 +166,8 @@ public final class CodegenDirector<
         S deserialized = new NodeMapper().deserialize(settingsNode, settingsType);
         settings(deserialized);
         settingsNode.asObjectNode()
-            .flatMap(node -> node.getObjectMember("integrations"))
-            .ifPresent(this::integrationSettings);
+                .flatMap(node -> node.getObjectMember("integrations"))
+                .ifPresent(this::integrationSettings);
         return deserialized;
     }
 
@@ -245,7 +234,7 @@ public final class CodegenDirector<
      */
     public void integrationClassLoader(ClassLoader classLoader) {
         Objects.requireNonNull(integrationClass,
-                               "integrationClass() must be called before calling integrationClassLoader");
+                "integrationClass() must be called before calling integrationClassLoader");
         integrationFinder(() -> ServiceLoader.load(integrationClass, classLoader));
     }
 
@@ -290,6 +279,44 @@ public final class CodegenDirector<
     }
 
     /**
+     * Removes any shapes deprecated before the specified date.
+     *
+     * @param relativeDate Relative date, in YYYY-MM-DD format, to use to filter out deprecated shapes.
+     * @see ModelTransformer#filterDeprecatedRelativeDate(Model, String)
+     */
+    public void removeShapesDeprecatedBeforeDate(String relativeDate) {
+        transforms.add((model, transformer) -> {
+            LOGGER.finest("Removing shapes deprecated before date: " + relativeDate);
+            return transformer.filterDeprecatedRelativeDate(model, relativeDate);
+        });
+    }
+
+    /**
+     * Removes any shapes deprecated before the specified version.
+     *
+     * @param relativeVersion Version, in SemVer format, to use to filter out deprecated shapes.
+     * @see ModelTransformer#filterDeprecatedRelativeVersion(Model, String)
+     */
+    public void removeShapesDeprecatedBeforeVersion(String relativeVersion) {
+        transforms.add((model, transformer) -> {
+            LOGGER.finest("Removing shapes deprecated before version: " + relativeVersion);
+            return transformer.filterDeprecatedRelativeVersion(model, relativeVersion);
+        });
+    }
+
+    /**
+     * Makes {@code idempotencyToken} fields {@code clientOptional}.
+     *
+     * @see ModelTransformer#makeIdempotencyTokensClientOptional(Model)
+     */
+    public void makeIdempotencyTokensClientOptional() {
+        transforms.add((model, transformer) -> {
+            LOGGER.finest("Making `@idempotencyToken` fields `@clientOptional`");
+            return transformer.makeIdempotencyTokensClientOptional(model);
+        });
+    }
+
+    /**
      * Changes each compatible string shape with the enum trait to an enum shape.
      *
      * @param synthesizeEnumNames Whether enums without names should have names synthesized if possible.
@@ -299,6 +326,19 @@ public final class CodegenDirector<
         transforms.add((model, transformer) -> {
             LOGGER.finest("Creating dedicated input and output shapes for directed codegen");
             return transformer.changeStringEnumsToEnumShapes(model, synthesizeEnumNames);
+        });
+    }
+
+    /**
+     * Flattens service-level pagination information into operation pagination traits.
+     *
+     * @see ModelTransformer#flattenPaginationInfoIntoOperations(Model, ServiceShape)
+     */
+    public void flattenPaginationInfoIntoOperations() {
+        transforms.add((model, transformer) -> {
+            LOGGER.finest("Flattening pagination info into operation traits for directed codegen");
+            return transformer.flattenPaginationInfoIntoOperations(model,
+                    model.expectShape(service, ServiceShape.class));
         });
     }
 
@@ -368,13 +408,13 @@ public final class CodegenDirector<
         directedCodegen.generateService(new GenerateServiceDirective<>(context, serviceShape));
 
         LOGGER.finest(() -> "Performing custom codegen for "
-                            + directedCodegen.getClass().getName() + " before integrations");
+                + directedCodegen.getClass().getName() + " before integrations");
         directedCodegen.customizeBeforeIntegrations(customizeDirective);
 
         applyIntegrationCustomizations(context, integrations);
 
         LOGGER.finest(() -> "Performing custom codegen for "
-                            + directedCodegen.getClass().getName() + " after integrations");
+                + directedCodegen.getClass().getName() + " after integrations");
         directedCodegen.customizeAfterIntegrations(customizeDirective);
 
         LOGGER.finest(() -> "Directed codegen finished for " + directedCodegen.getClass().getName());
@@ -397,8 +437,8 @@ public final class CodegenDirector<
         // Use a default integration finder implementation.
         if (integrationFinder == null) {
             LOGGER.fine(() -> String.format("Finding %s integrations using the %s class loader",
-                                            integrationClass.getName(),
-                                            CodegenDirector.class.getCanonicalName()));
+                    integrationClass.getName(),
+                    CodegenDirector.class.getCanonicalName()));
             integrationClassLoader(getClass().getClassLoader());
         }
     }
@@ -445,7 +485,12 @@ public final class CodegenDirector<
     private C createContext(ServiceShape serviceShape, SymbolProvider provider, List<I> integrations) {
         LOGGER.fine(() -> "Creating a codegen context for " + directedCodegen.getClass().getName());
         return directedCodegen.createContext(new CreateContextDirective<>(
-                model, settings, serviceShape, provider, fileManifest, integrations));
+                model,
+                settings,
+                serviceShape,
+                provider,
+                fileManifest,
+                integrations));
     }
 
     private void registerInterceptors(C context, List<I> integrations) {
@@ -459,7 +504,8 @@ public final class CodegenDirector<
 
     private void generateShapesInService(C context, ServiceShape serviceShape) {
         LOGGER.fine(() -> String.format("Generating shapes for %s in %s order",
-                directedCodegen.getClass().getName(), this.shapeGenerationOrder.name()));
+                directedCodegen.getClass().getName(),
+                this.shapeGenerationOrder.name()));
         Set<Shape> shapes = new Walker(context.model()).walkShapes(serviceShape);
         ShapeGenerator<W, C, S> generator = new ShapeGenerator<>(context, serviceShape, directedCodegen);
         List<Shape> orderedShapes = new ArrayList<>();
@@ -498,7 +544,7 @@ public final class CodegenDirector<
     private void applyIntegrationCustomizations(C context, List<I> integrations) {
         for (I integration : integrations) {
             LOGGER.finest(() -> "Customizing codegen for " + directedCodegen.getClass().getName()
-                                + " using integration " + integration.getClass().getName());
+                    + " using integration " + integration.getClass().getName());
             integration.customize(context);
         }
     }
@@ -535,13 +581,13 @@ public final class CodegenDirector<
         public Void operationShape(OperationShape shape) {
             LOGGER.finest(() -> "Generating operation " + shape.getId());
             directedCodegen.generateOperation(
-                new GenerateOperationDirective<>(context, serviceShape, shape));
+                    new GenerateOperationDirective<>(context, serviceShape, shape));
             return null;
         }
 
         @Override
         public Void structureShape(StructureShape shape) {
-            if (shape.hasTrait(ErrorTrait.class)) {
+            if (shape.hasTrait(ErrorTrait.ID)) {
                 LOGGER.finest(() -> "Generating error " + shape.getId());
                 directedCodegen.generateError(new GenerateErrorDirective<>(context, serviceShape, shape));
             } else {

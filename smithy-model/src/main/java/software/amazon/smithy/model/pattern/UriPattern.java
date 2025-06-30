@@ -1,18 +1,7 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.model.pattern;
 
 import java.util.ArrayList;
@@ -55,12 +44,12 @@ public final class UriPattern extends SmithyPattern {
      * Parse a URI pattern string into a UriPattern.
      *
      * <p>The provided value must match the origin-form request-target
-     * grammar production in RFC 7230, section 5.3.1.
+     * grammar production in RFC 9112, section 3.2.1.
      *
      * @param uri URI pattern to parse.
      * @return Returns the parsed URI pattern.
      * @throws InvalidUriPatternException for invalid URI patterns.
-     * @see <a href="https://tools.ietf.org/html/rfc7230#section-5.3.1">RFC 7230 Section 5.3.1</a>
+     * @see <a href="https://tools.ietf.org/html/rfc9112#section-3.2.1">RFC 9112 Section 3.2.1</a>
      */
     public static UriPattern parse(String uri) {
         if (uri.endsWith("?")) {
@@ -147,7 +136,7 @@ public final class UriPattern extends SmithyPattern {
                 continue;
             }
             if (segment.isLiteral() && otherSegment.isLiteral()
-                && segment.getContent().equals(otherSegment.getContent())) {
+                    && segment.getContent().equals(otherSegment.getContent())) {
                 continue;
             }
             return false;
@@ -161,7 +150,8 @@ public final class UriPattern extends SmithyPattern {
     @Deprecated
     public List<Pair<Segment, Segment>> getConflictingLabelSegments(UriPattern otherPattern) {
         Map<Segment, Segment> conflictingSegments = getConflictingLabelSegmentsMap(otherPattern);
-        return conflictingSegments.entrySet().stream()
+        return conflictingSegments.entrySet()
+                .stream()
                 .map(entry -> Pair.of(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
     }

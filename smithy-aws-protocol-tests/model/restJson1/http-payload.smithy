@@ -1,4 +1,5 @@
 // This file defines test cases that test HTTP payload bindings.
+// Note that string payloads are tested in `http-string-payload.smithy`.
 // See: https://smithy.io/2.0/spec/http-bindings.html#httppayload-trait
 
 $version: "2.0"
@@ -6,6 +7,7 @@ $version: "2.0"
 namespace aws.protocoltests.restjson
 
 use aws.protocols#restJson1
+use smithy.test#httpMalformedRequestTests
 use aws.protocoltests.shared#TextPlainBlob
 use smithy.test#httpRequestTests
 use smithy.test#httpResponseTests
@@ -75,6 +77,26 @@ apply HttpPayloadTraits @httpRequestTests([
             blob: "This is definitely a jpeg"
         },
         appliesTo: "server",
+    },
+    {
+        id: "RestJsonHttpPayloadTraitsWithBlobAcceptsNoContentType",
+        documentation: """
+            Servers must accept no content type for blob inputs
+            without the media type trait.""",
+        protocol: restJson1,
+        method: "POST",
+        uri: "/HttpPayloadTraits",
+        body: "This is definitely a jpeg",
+        bodyMediaType: "application/octet-stream",
+        headers: {
+            "X-Foo": "Foo",
+        },
+        params: {
+            foo: "Foo",
+            blob: "This is definitely a jpeg"
+        },
+        appliesTo: "server",
+        tags: [ "content-type" ]
     },
     {
         id: "RestJsonHttpPayloadTraitsWithBlobAcceptsAllAccepts",
@@ -255,6 +277,19 @@ apply HttpPayloadWithStructure @httpResponseTests([
                 greeting: "hello",
                 name: "Phreddy"
             }
+        }
+    }
+])
+
+apply HttpPayloadWithStructure @httpResponseTests([
+    {
+        id: "RestJsonHttpPayloadWithStructureAndEmptyResponseBody",
+        documentation: "Serializes a structure in the payload",
+        protocol: restJson1,
+        code: 200,
+        body: "",
+        params: {
+            nested: null
         }
     }
 ])

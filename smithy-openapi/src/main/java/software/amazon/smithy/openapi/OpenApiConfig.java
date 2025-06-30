@@ -1,18 +1,7 @@
 /*
- * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.openapi;
 
 import java.util.Collections;
@@ -83,7 +72,7 @@ public class OpenApiConfig extends JsonSchemaConfig {
         DEPRECATED_PROPERTY_RENAMES.put("openapi.substitutions", "substitutions");
         // Cheating a little here, but oh well.
         DEPRECATED_PROPERTY_RENAMES.put("apigateway.disableCloudFormationSubstitution",
-                                        "disableCloudFormationSubstitution");
+                "disableCloudFormationSubstitution");
     }
 
     private ShapeId protocol;
@@ -99,8 +88,14 @@ public class OpenApiConfig extends JsonSchemaConfig {
     private Map<String, Node> substitutions = Collections.emptyMap();
     private Map<String, Node> jsonAdd = Collections.emptyMap();
     private List<String> externalDocs = ListUtils.of(
-            "Homepage", "API Reference", "User Guide", "Developer Guide", "Reference", "Guide");
+            "Homepage",
+            "API Reference",
+            "User Guide",
+            "Developer Guide",
+            "Reference",
+            "Guide");
     private boolean disableIntegerFormat = false;
+    private boolean syncCorsPreflightIntegration = false;
     private ErrorStatusConflictHandlingStrategy onErrorStatusConflict;
     private OpenApiVersion version = OpenApiVersion.VERSION_3_0_2;
 
@@ -340,7 +335,6 @@ public class OpenApiConfig extends JsonSchemaConfig {
         super.setJsonSchemaVersion(version.getJsonSchemaVersion());
     }
 
-
     public boolean getDisableIntegerFormat() {
         return this.disableIntegerFormat;
     }
@@ -354,6 +348,19 @@ public class OpenApiConfig extends JsonSchemaConfig {
         this.disableIntegerFormat = disableIntegerFormat;
     }
 
+    public boolean getSyncCorsPreflightIntegration() {
+        return this.syncCorsPreflightIntegration;
+    }
+
+    /**
+     * Set true to sync CORS preflight integration request templates with the other
+     * methods of the same path resource and set passthroughBehavior to "never".
+     *
+     * @param syncCorsPreflightIntegration True to match CORS preflight integration.
+     */
+    public void setSyncCorsPreflightIntegration(boolean syncCorsPreflightIntegration) {
+        this.syncCorsPreflightIntegration = syncCorsPreflightIntegration;
+    }
 
     public ErrorStatusConflictHandlingStrategy getOnErrorStatusConflict() {
         return onErrorStatusConflict;
@@ -416,18 +423,19 @@ public class OpenApiConfig extends JsonSchemaConfig {
                 // Fixes specific renamed keys.
                 String rename = DEPRECATED_PROPERTY_RENAMES.get(entry.getKey());
                 LOGGER.warning("Deprecated `openapi` configuration setting found: " + entry.getKey()
-                               + ". Use " + rename + " instead");
+                        + ". Use " + rename + " instead");
                 mapped = mapped.withMember(rename, entry.getValue());
                 mapped = mapped.withoutMember(entry.getKey());
             } else if (entry.getKey().startsWith("disable.")) {
                 // These are now added into the "disableFeatures" property.
                 String property = StringUtils.uncapitalize(entry.getKey().substring(8));
                 throw new OpenApiException("Unsupported `openapi` configuration setting found: " + entry.getKey()
-                                           + ". Add `" + property + "` to the `disableFeatures` property instead");
+                        + ". Add `" + property + "` to the `disableFeatures` property instead");
             } else if (entry.getKey().startsWith("openapi.use.")) {
                 throw new OpenApiException(String.format(
                         "The `%s` `openapi` plugin property is no longer supported. Use the "
-                        + "`disableFeatures` property instead to disable features.", entry.getKey()));
+                                + "`disableFeatures` property instead to disable features.",
+                        entry.getKey()));
             }
         }
 

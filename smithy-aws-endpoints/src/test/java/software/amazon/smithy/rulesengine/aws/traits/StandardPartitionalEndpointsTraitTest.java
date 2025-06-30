@@ -1,13 +1,16 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package software.amazon.smithy.rulesengine.aws.traits;
-
-import org.junit.jupiter.api.Test;
-import software.amazon.smithy.model.Model;
-import software.amazon.smithy.model.shapes.ShapeId;
-
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import software.amazon.smithy.model.Model;
+import software.amazon.smithy.model.shapes.ShapeId;
 
 class StandardPartitionalEndpointsTraitTest {
     @Test
@@ -24,6 +27,10 @@ class StandardPartitionalEndpointsTraitTest {
 
         assertEquals(trait.getEndpointPatternType(), EndpointPatternType.SERVICE_DNSSUFFIX);
         assertEquals(trait.getPartitionEndpointSpecialCases().size(), 0);
+        assertEquals(trait,
+                new StandardPartitionalEndpointsTrait.Provider()
+                        .createTrait(StandardPartitionalEndpointsTrait.ID,
+                                trait.toBuilder().build().toNode()));
 
         trait = getTraitFromService(model, "ns.foo#Service2");
 
@@ -43,12 +50,37 @@ class StandardPartitionalEndpointsTraitTest {
         assertEquals(case2.getDualStack(), true);
         assertEquals(case2.getRegion(), "us-west-2");
         assertNull(case2.getFips());
+
+        assertEquals(trait,
+                new StandardPartitionalEndpointsTrait.Provider()
+                        .createTrait(StandardPartitionalEndpointsTrait.ID,
+                                trait.toBuilder().build().toNode()));
+
+        trait = getTraitFromService(model, "ns.foo#Service3");
+
+        assertEquals(trait.getEndpointPatternType(), EndpointPatternType.AWS_RECOMMENDED);
+        assertEquals(trait.getPartitionEndpointSpecialCases().size(), 1);
+
+        cases = trait.getPartitionEndpointSpecialCases().get("aws");
+
+        case1 = cases.get(0);
+        assertEquals(case1.getEndpoint(), "https://myservice.{dnsSuffix}");
+        assertEquals(case1.getRegion(), "us-west-2");
+        assertNull(case1.getDualStack());
+        assertNull(case1.getFips());
+
+        assertEquals(trait,
+                new StandardPartitionalEndpointsTrait.Provider()
+                        .createTrait(StandardPartitionalEndpointsTrait.ID,
+                                trait.toBuilder().build().toNode()));
     }
 
     private StandardPartitionalEndpointsTrait getTraitFromService(Model model, String service) {
         return model
-            .expectShape(ShapeId.from(service))
-            .asServiceShape().get()
-            .getTrait(StandardPartitionalEndpointsTrait.class).get();
+                .expectShape(ShapeId.from(service))
+                .asServiceShape()
+                .get()
+                .getTrait(StandardPartitionalEndpointsTrait.class)
+                .get();
     }
 }

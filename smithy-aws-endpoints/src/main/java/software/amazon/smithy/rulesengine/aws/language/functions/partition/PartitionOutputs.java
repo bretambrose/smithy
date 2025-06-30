@@ -2,7 +2,6 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.rulesengine.aws.language.functions.partition;
 
 import java.util.List;
@@ -15,7 +14,6 @@ import software.amazon.smithy.model.node.ObjectNode;
 import software.amazon.smithy.model.node.ToNode;
 import software.amazon.smithy.rulesengine.language.RulesComponentBuilder;
 import software.amazon.smithy.utils.ListUtils;
-import software.amazon.smithy.utils.SmithyBuilder;
 import software.amazon.smithy.utils.SmithyUnstableApi;
 import software.amazon.smithy.utils.ToSmithyBuilder;
 
@@ -30,8 +28,12 @@ public final class PartitionOutputs implements ToSmithyBuilder<PartitionOutputs>
     private static final String SUPPORTS_FIPS = "supportsFIPS";
     private static final String SUPPORTS_DUAL_STACK = "supportsDualStack";
     private static final String IMPLICIT_GLOBAL_REGION = "implicitGlobalRegion";
-    private static final List<String> PROPERTIES = ListUtils.of(NAME, DNS_SUFFIX, DUAL_STACK_DNS_SUFFIX,
-            SUPPORTS_FIPS, SUPPORTS_DUAL_STACK, IMPLICIT_GLOBAL_REGION);
+    private static final List<String> PROPERTIES = ListUtils.of(NAME,
+            DNS_SUFFIX,
+            DUAL_STACK_DNS_SUFFIX,
+            SUPPORTS_FIPS,
+            SUPPORTS_DUAL_STACK,
+            IMPLICIT_GLOBAL_REGION);
 
     private final String name;
     private final String dnsSuffix;
@@ -142,7 +144,7 @@ public final class PartitionOutputs implements ToSmithyBuilder<PartitionOutputs>
     }
 
     @Override
-    public SmithyBuilder<PartitionOutputs> toBuilder() {
+    public Builder toBuilder() {
         return new Builder(getSourceLocation())
                 .name(name)
                 .dnsSuffix(dnsSuffix)
@@ -186,8 +188,12 @@ public final class PartitionOutputs implements ToSmithyBuilder<PartitionOutputs>
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, dnsSuffix, dualStackDnsSuffix,
-                supportsFips, supportsDualStack, implicitGlobalRegion);
+        return Objects.hash(name,
+                dnsSuffix,
+                dualStackDnsSuffix,
+                supportsFips,
+                supportsDualStack,
+                implicitGlobalRegion);
     }
 
     /**

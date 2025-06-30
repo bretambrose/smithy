@@ -2,10 +2,10 @@
  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
  * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.rulesengine.aws.traits;
 
 import java.util.Objects;
+import java.util.Optional;
 import software.amazon.smithy.model.FromSourceLocation;
 import software.amazon.smithy.model.SourceLocation;
 import software.amazon.smithy.model.node.Node;
@@ -75,26 +75,47 @@ public final class RegionSpecialCase implements FromSourceLocation, ToNode, ToSm
     @Override
     public Node toNode() {
         return Node.objectNodeBuilder()
-            .withMember(ENDPOINT, endpoint)
-            .withMember(DUAL_STACK, dualStack.toString())
-            .withMember(FIPS, fips.toString())
-            .withMember(SIGNING_REGION, signingRegion)
-            .build();
+                .withMember(ENDPOINT, endpoint)
+                .withOptionalMember(DUAL_STACK, Optional.ofNullable(dualStack).map(Node::from))
+                .withOptionalMember(FIPS, Optional.ofNullable(fips).map(Node::from))
+                .withOptionalMember(DUAL_STACK, Optional.ofNullable(dualStack).map(Node::from))
+                .withOptionalMember(SIGNING_REGION, Optional.ofNullable(signingRegion).map(Node::from))
+                .build();
     }
 
     @Override
-    public SmithyBuilder<RegionSpecialCase> toBuilder() {
+    public Builder toBuilder() {
         return new Builder()
-            .dualStack(dualStack)
-            .endpoint(endpoint)
-            .fips(fips)
-            .signingRegion(signingRegion)
-            .sourceLocation(sourceLocation);
+                .dualStack(dualStack)
+                .endpoint(endpoint)
+                .fips(fips)
+                .signingRegion(signingRegion)
+                .sourceLocation(sourceLocation);
     }
 
     @Override
     public SourceLocation getSourceLocation() {
         return FromSourceLocation.super.getSourceLocation();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        RegionSpecialCase that = (RegionSpecialCase) o;
+        return Objects.equals(endpoint, that.endpoint)
+                && Objects.equals(dualStack, that.dualStack)
+                && Objects.equals(fips, that.fips)
+                && Objects.equals(signingRegion, that.signingRegion);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(endpoint, dualStack, fips, signingRegion);
     }
 
     /**
@@ -106,12 +127,12 @@ public final class RegionSpecialCase implements FromSourceLocation, ToNode, ToSm
     public static RegionSpecialCase fromNode(Node node) {
         ObjectNode objectNode = node.expectObjectNode();
         return builder()
-            .sourceLocation(objectNode.getSourceLocation())
-            .endpoint(objectNode.expectStringMember(ENDPOINT).getValue())
-            .dualStack(objectNode.getBooleanMemberOrDefault(DUAL_STACK, null))
-            .fips(objectNode.getBooleanMemberOrDefault(FIPS, null))
-            .signingRegion(objectNode.getStringMemberOrDefault(SIGNING_REGION, null))
-            .build();
+                .sourceLocation(objectNode.getSourceLocation())
+                .endpoint(objectNode.expectStringMember(ENDPOINT).getValue())
+                .dualStack(objectNode.getBooleanMemberOrDefault(DUAL_STACK, null))
+                .fips(objectNode.getBooleanMemberOrDefault(FIPS, null))
+                .signingRegion(objectNode.getStringMemberOrDefault(SIGNING_REGION, null))
+                .build();
     }
 
     public static Builder builder() {

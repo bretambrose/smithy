@@ -359,7 +359,8 @@ an appropriate default value for the member:
 * enum, intEnum, union: The unknown variant. These types SHOULD define an
   unknown variant to account for receiving unknown members.
 * union: The unknown variant. Client code generators for unions SHOULD
-  define an unknown variant to account for newly added members.
+  define an unknown variant to account for newly added members. Union shape
+  members SHOULD NOT be named "Unknown" or "UnknownVariant" to avoid conflicts.
 * structure: an empty structure, if possible, otherwise a deserialization
   error.
 
@@ -816,4 +817,4 @@ different services.
 
 ### What are the `@input` and `@output` traits?
 
-See https://github.com/awslabs/smithy/blob/main/designs/operation-input-output-and-unit-types.md
+See https://github.com/smithy-lang/smithy/blob/main/designs/operation-input-output-and-unit-types.md

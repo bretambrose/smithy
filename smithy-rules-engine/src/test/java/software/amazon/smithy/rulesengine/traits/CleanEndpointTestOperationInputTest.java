@@ -1,3 +1,7 @@
+/*
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 package software.amazon.smithy.rulesengine.traits;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,9 +40,9 @@ public class CleanEndpointTestOperationInputTest {
         assertTrue(transformed.getShape(SERVICE_ID).isPresent());
 
         ServiceShape mainService = model.expectShape(SERVICE_ID, ServiceShape.class);
-        assertTrue(mainService.hasTrait(EndpointTestsTrait.class));
+        assertTrue(mainService.hasTrait(EndpointTestsTrait.ID));
         ServiceShape transformedService = transformed.expectShape(SERVICE_ID, ServiceShape.class);
-        assertTrue(transformedService.hasTrait(EndpointTestsTrait.class));
+        assertTrue(transformedService.hasTrait(EndpointTestsTrait.ID));
 
         Node.assertEquals(transformedService.expectTrait(EndpointTestsTrait.class).toNode(),
                 mainService.expectTrait(EndpointTestsTrait.class).toNode());
@@ -52,7 +56,7 @@ public class CleanEndpointTestOperationInputTest {
         assertTrue(transformed.getShape(SERVICE_ID).isPresent());
 
         ServiceShape transformedService = transformed.expectShape(SERVICE_ID, ServiceShape.class);
-        assertTrue(transformedService.hasTrait(EndpointTestsTrait.class));
+        assertTrue(transformedService.hasTrait(EndpointTestsTrait.ID));
 
         EndpointTestsTrait trait = transformedService.expectTrait(EndpointTestsTrait.class);
         assertEquals(1, trait.getTestCases().size());
@@ -67,8 +71,9 @@ public class CleanEndpointTestOperationInputTest {
         // Hack out the test case without operation input.
         ModelTransformer modelTransformer = ModelTransformer.create();
         replacementTrait = replacementTrait.toBuilder().removeTestCase(replacementTrait.getTestCases().get(0)).build();
-        Model transformed = modelTransformer.replaceShapes(model, ListUtils.of(
-                serviceShape.toBuilder().addTrait(replacementTrait).build()));
+        Model transformed = modelTransformer.replaceShapes(model,
+                ListUtils.of(
+                        serviceShape.toBuilder().addTrait(replacementTrait).build()));
 
         // Then do the filtering.
         transformed = modelTransformer.filterShapes(transformed, shape -> !shape.getId().equals(GET_THING));
@@ -77,7 +82,7 @@ public class CleanEndpointTestOperationInputTest {
         assertTrue(transformed.getShape(SERVICE_ID).isPresent());
 
         ServiceShape transformedService = transformed.expectShape(SERVICE_ID, ServiceShape.class);
-        assertTrue(transformedService.hasTrait(EndpointTestsTrait.class));
+        assertTrue(transformedService.hasTrait(EndpointTestsTrait.ID));
 
         EndpointTestsTrait trait = transformedService.expectTrait(EndpointTestsTrait.class);
         assertEquals(0, trait.getTestCases().size());

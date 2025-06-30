@@ -1,18 +1,7 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License").
- * You may not use this file except in compliance with the License.
- * A copy of the License is located at
- *
- *  http://aws.amazon.com/apache2.0
- *
- * or in the "license" file accompanying this file. This file is distributed
- * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
- * express or implied. See the License for the specific language governing
- * permissions and limitations under the License.
+ * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
  */
-
 package software.amazon.smithy.build;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -84,11 +73,11 @@ public class FileManifestTest {
     @Test
     public void writesJsonFiles() throws IOException {
         FileManifest a = FileManifest.create(outputDirectory);
-        a.writeJson("foo/file.json", Node.objectNode());
+        Path resolved = a.writeJson("foo/file.json", Node.objectNode());
 
-        assertThat(Files.isDirectory(outputDirectory.resolve("foo")), is(true));
-        assertThat(Files.isRegularFile(outputDirectory.resolve("foo/file.json")), is(true));
-        assertThat(new String(Files.readAllBytes(outputDirectory.resolve("foo/file.json"))), equalTo("{}\n"));
+        assertThat(resolved, equalTo(outputDirectory.resolve("foo/file.json")));
+        assertThat(Files.isRegularFile(resolved), is(true));
+        assertThat(new String(Files.readAllBytes(resolved)), equalTo("{}\n"));
     }
 
     @Test
@@ -117,5 +106,21 @@ public class FileManifestTest {
         a.writeFile("test.txt", getClass(), "simple-config.json");
 
         assertThat(Files.isRegularFile(outputDirectory.resolve("test.txt")), is(true));
+    }
+
+    @Test
+    public void writesWithWriter() throws IOException {
+        FileManifest a = FileManifest.create(outputDirectory);
+        Path resolved = a.writeUsing(Paths.get("foo/bar.txt"), (w) -> {
+            try {
+                w.write("foo");
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        assertThat(resolved, equalTo(outputDirectory.resolve("foo/bar.txt")));
+        assertThat(Files.isRegularFile(resolved), is(true));
+        assertThat(new String(Files.readAllBytes(resolved)).trim(), equalTo("foo"));
     }
 }
