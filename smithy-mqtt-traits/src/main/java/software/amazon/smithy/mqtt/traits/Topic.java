@@ -52,7 +52,8 @@ public final class Topic {
 
         boolean hasFullWildcard = false;
 
-        for (String level : topic.split("/")) {
+        // use negative limit to allow zero-length captures which matches MQTT specification behavior
+        for (String level : topic.split("/", -1)) {
             if (hasFullWildcard) {
                 throw new TopicSyntaxException(format(
                         "A full wildcard must be the last segment in a topic filter. Found `%s` in `%s`",
@@ -170,19 +171,22 @@ public final class Topic {
             Level thisLevel = levels.get(i);
             Level otherLevel = other.levels.get(i);
 
+            String thisValue = thisLevel.getContent();
+            String otherValue = otherLevel.getContent();
+
             // multi-level wildcard will conflict regardless of what the other level is
-            if (thisLevel.getContent().equals("#") || otherLevel.getContent().equals("#")) {
+            if (thisValue.equals("#") || otherValue.equals("#")) {
                 return true;
             }
 
             // single-level wildcard is a level match regardless of the other level
-            if (thisLevel.getContent().equals("+") || otherLevel.getContent().equals("+")) {
+            if (thisValue.equals("+") || otherValue.equals("+")) {
                 continue;
             }
 
             // Both are static levels with different values.
             if (!thisLevel.isLabel() && !otherLevel.isLabel()
-                    && !thisLevel.getContent().equals(otherLevel.getContent())) {
+                    && !thisValue.equals(otherValue)) {
                 return false;
             }
 

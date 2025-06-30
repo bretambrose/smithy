@@ -6,6 +6,9 @@ package software.amazon.smithy.mqtt.traits;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -53,7 +56,9 @@ public class TopicConflictTest {
                 // No conflict
                 {"a/b/c/d", "a/{b}/c/{d}", false},
                 // No conflict.
-                {"$aws/things/{thingName}/jobs/get", "$aws/things/{thingName}/jobs/start-next", false}
+                {"$aws/things/{thingName}/jobs/get", "$aws/things/{thingName}/jobs/start-next", false},
+                // No conflict, empty second level creates mismatch with single-level topic
+                {"a/", "a", false}
         });
     }
 
@@ -65,7 +70,13 @@ public class TopicConflictTest {
 
         if (a.conflictsWith(b) != isConflicting) {
             if (isConflicting) {
-                Assertions.fail("Expected conflict between `" + a + "` and `" + b + "`");
+                List<String> aLevels = a.getLevels().stream().map(Topic.Level::toString).collect(Collectors.toList());
+                String aMarkedTopic = String.join("@", aLevels);
+
+                List<String> bLevels = b.getLevels().stream().map(Topic.Level::toString).collect(Collectors.toList());
+                String bMarkedTopic = String.join("@", bLevels);
+
+                Assertions.fail("Expected conflict between `" + aMarkedTopic + "` and `" + bMarkedTopic + "`");
             } else {
                 Assertions.fail("Unexpected conflict between `" + a + "` and `" + b + "`");
             }
@@ -113,7 +124,13 @@ public class TopicConflictTest {
                 // Conflicts because '#' matches everything
                 {"+/a", "#", true},
                 // Conflicts because 'a/a' matches both
-                {"+/a", "a/+", true}
+                {"+/a", "a/+", true},
+                // Conflicts because single-level wildcard matches empty segments
+                {"+/+", "/", true},
+                // Conflict because wildcard matches empty level
+                {"/", "+/", true},
+                // Conflict because wildcard matches empty level
+                {"/+", "/", true},
         });
     }
 }
